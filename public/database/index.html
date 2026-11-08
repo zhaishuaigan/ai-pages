@@ -1,0 +1,1357 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据库管理 - 资源管理器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --bg: #07090d;
+            --panel: #0e131b;
+            --panel-2: #0b0f16;
+            --panel-3: #131a24;
+            --border: #1e2735;
+            --border-2: #26313f;
+            --text: #e8edf4;
+            --text-2: #c3ccda;
+            --dim: #8590a2;
+            --dim-2: #5c6779;
+            --accent: #22d3ee;
+            --sel: rgba(34, 211, 238, .14);
+            --sel-b: rgba(34, 211, 238, .42);
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+            font-size: 13px;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #232e3f;
+            border-radius: 8px;
+            border: 2px solid var(--bg);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #2f3d52;
+        }
+
+        .app {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        /* ---------- 工具栏 ---------- */
+        .tb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            height: 46px;
+            padding: 0 12px;
+            background: linear-gradient(180deg, #131a24, #0e131b);
+            border-bottom: 1px solid var(--border);
+            flex: none;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding-right: 12px;
+            border-right: 1px solid var(--border);
+            font-weight: 600;
+            letter-spacing: .3px;
+            color: var(--text-2);
+        }
+
+        .brand svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .btn {
+            width: 32px;
+            height: 32px;
+            display: grid;
+            place-items: center;
+            border-radius: 8px;
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--text-2);
+            cursor: pointer;
+            transition: .15s;
+        }
+
+        .btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .btn:hover {
+            background: var(--panel-3);
+            border-color: var(--border-2);
+            color: var(--accent);
+        }
+
+        .btn[disabled] {
+            opacity: .28;
+            cursor: default;
+            background: transparent;
+            border-color: transparent;
+            color: var(--text-2);
+        }
+
+        .addr {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            height: 32px;
+            padding: 0 10px;
+            background: var(--panel-2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            min-width: 0;
+        }
+
+        .crumb {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            color: var(--text-2);
+            cursor: pointer;
+            white-space: nowrap;
+            transition: .15s;
+        }
+
+        .crumb svg {
+            width: 15px;
+            height: 15px;
+        }
+
+        .crumb:hover {
+            background: var(--panel-3);
+            color: var(--accent);
+        }
+
+        .crumb.cur {
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .sep {
+            color: var(--dim-2);
+            flex: none;
+        }
+
+        .sb {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            height: 32px;
+            padding: 0 10px;
+            background: var(--panel-2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            flex: none;
+        }
+
+        .sb svg {
+            width: 15px;
+            height: 15px;
+            color: var(--dim);
+            flex: none;
+        }
+
+        .sb input {
+            width: 150px;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text);
+            font-size: 13px;
+        }
+
+        /* ---------- 主体 ---------- */
+        .body {
+            flex: 1;
+            display: flex;
+            min-height: 0;
+        }
+
+        .side {
+            width: 236px;
+            flex: none;
+            background: var(--panel-2);
+            border-right: 1px solid var(--border);
+            overflow: auto;
+            padding: 8px 0 20px;
+        }
+
+        .side-h {
+            padding: 6px 14px 8px;
+            font-size: 11px;
+            letter-spacing: 1px;
+            color: var(--dim-2);
+            text-transform: uppercase;
+        }
+
+        .tn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            height: 28px;
+            padding-right: 8px;
+            border-radius: 0 6px 6px 0;
+            cursor: pointer;
+            color: var(--text-2);
+            white-space: nowrap;
+            overflow: hidden;
+            transition: background .12s;
+        }
+
+        .tn .tico {
+            display: flex;
+            flex: none;
+        }
+
+        .tn .tico svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .tn .tname {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .tn:hover {
+            background: var(--panel-3);
+        }
+
+        .tn.on {
+            background: var(--sel);
+            color: var(--accent);
+        }
+
+        .arw {
+            width: 14px;
+            height: 14px;
+            display: grid;
+            place-items: center;
+            color: var(--dim-2);
+            flex: none;
+            font-size: 9px;
+            transition: transform .15s;
+        }
+
+        .arw.leaf {
+            visibility: hidden;
+        }
+
+        .arw.open {
+            transform: rotate(90deg);
+        }
+
+        .main {
+            flex: 1;
+            overflow: auto;
+            padding: 14px 16px 40px;
+            min-width: 0;
+        }
+
+        /* ---------- 详情 ---------- */
+        .detail {
+            display: flex;
+            gap: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            background: linear-gradient(180deg, var(--panel-3), var(--panel));
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+
+        .detail .big {
+            flex: none;
+        }
+
+        .detail .big svg {
+            width: 64px;
+            height: 64px;
+        }
+
+        .dinfo {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .dinfo h2 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            word-break: break-all;
+        }
+
+        .dtype {
+            display: inline-block;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 20px;
+            color: var(--accent);
+            background: var(--sel);
+            border: 1px solid var(--sel-b);
+            margin-bottom: 10px;
+        }
+
+        .dprops {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+            gap: 6px 18px;
+        }
+
+        .pp {
+            display: flex;
+            gap: 8px;
+            font-size: 12px;
+            border-bottom: 1px dashed #1b2430;
+            padding-bottom: 5px;
+        }
+
+        .pp span {
+            color: var(--dim);
+            flex: none;
+            min-width: 62px;
+        }
+
+        .pp b {
+            font-weight: 500;
+            color: var(--text-2);
+            word-break: break-all;
+        }
+
+        .sql {
+            margin-top: 14px;
+            padding: 12px 14px;
+            background: #06090e;
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--accent);
+            border-radius: 8px;
+            font-family: "Cascadia Code", Consolas, Monaco, monospace;
+            font-size: 12px;
+            line-height: 1.7;
+            color: #9fe8f5;
+            white-space: pre-wrap;
+            word-break: break-word;
+            overflow-x: auto;
+        }
+
+        /* ---------- 网格 ---------- */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+            gap: 6px;
+        }
+
+        .tile {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            padding: 12px 6px 10px;
+            border: 1px solid transparent;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: .12s;
+        }
+
+        .tile .sico svg {
+            width: 54px;
+            height: 54px;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, .5));
+        }
+
+        .tile .nm {
+            font-size: 12px;
+            color: var(--text-2);
+            text-align: center;
+            width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .tile .sub {
+            font-size: 11px;
+            color: var(--dim-2);
+        }
+
+        .tile:hover {
+            background: rgba(255, 255, 255, .025);
+            border-color: var(--border);
+        }
+
+        .tile.on {
+            background: var(--sel);
+            border-color: var(--sel-b);
+        }
+
+        .tile.on .nm {
+            color: var(--accent);
+        }
+
+        /* ---------- 列表 ---------- */
+        .list {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            background: var(--panel-2);
+        }
+
+        .lhead,
+        .row {
+            display: grid;
+            grid-template-columns: minmax(180px, 1fr) 130px 130px 120px;
+            align-items: center;
+            gap: 10px;
+            padding: 0 14px;
+        }
+
+        .lhead {
+            height: 34px;
+            font-size: 11px;
+            color: var(--dim-2);
+            background: var(--panel-3);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .row {
+            height: 38px;
+            border-bottom: 1px solid #121a24;
+            cursor: pointer;
+            color: var(--text-2);
+            transition: .12s;
+        }
+
+        .row:last-child {
+            border-bottom: none;
+        }
+
+        .row:hover {
+            background: rgba(255, 255, 255, .025);
+        }
+
+        .row.on {
+            background: var(--sel);
+        }
+
+        .rname {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        .rname svg {
+            width: 22px;
+            height: 22px;
+            flex: none;
+        }
+
+        .rname span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .row.on .rname span {
+            color: var(--accent);
+        }
+
+        .cc {
+            font-size: 12px;
+            color: var(--dim);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* ---------- 状态栏 ---------- */
+        .status {
+            flex: none;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            height: 28px;
+            padding: 0 14px;
+            background: var(--panel);
+            border-top: 1px solid var(--border);
+            font-size: 11.5px;
+            color: var(--dim);
+        }
+
+        .status b {
+            color: var(--text-2);
+            font-weight: 500;
+        }
+
+        .empty {
+            padding: 60px 0;
+            text-align: center;
+            color: var(--dim-2);
+            font-size: 13px;
+        }
+
+        .empty svg {
+            width: 46px;
+            height: 46px;
+            opacity: .5;
+            margin-bottom: 12px;
+        }
+
+        @media (max-width: 860px) {
+            .side {
+                display: none;
+            }
+
+            .lhead,
+            .row {
+                grid-template-columns: minmax(140px, 1fr) 110px;
+            }
+
+            .lhead .c3,
+            .lhead .c4,
+            .row .c3,
+            .row .c4 {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+        <div class="tb">
+            <div class="brand">
+                <svg viewBox="0 0 24 24" fill="none">
+                    <ellipse cx="12" cy="6" rx="8.4" ry="3.4" stroke="#22d3ee" stroke-width="1.6" />
+                    <path d="M3.6 6v12c0 1.88 3.76 3.4 8.4 3.4s8.4-1.52 8.4-3.4V6" stroke="#22d3ee"
+                        stroke-width="1.6" />
+                    <path d="M3.6 12c0 1.88 3.76 3.4 8.4 3.4s8.4-1.52 8.4-3.4" stroke="#22d3ee" stroke-width="1.6" />
+                </svg>
+                <span>数据库管理</span>
+            </div>
+            <button class="btn" id="back" title="后退">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M15 18l-6-6 6-6" />
+                </svg>
+            </button>
+            <button class="btn" id="fwd" title="前进">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M9 6l6 6-6 6" />
+                </svg>
+            </button>
+            <button class="btn" id="up" title="上一级">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M12 19V5M5 12l7-7 7 7" />
+                </svg>
+            </button>
+            <button class="btn" id="refresh" title="刷新">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M21 12a9 9 0 1 1-2.64-6.36M21 4v5h-5" />
+                </svg>
+            </button>
+            <div class="addr" id="addr"></div>
+            <div class="sb">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <circle cx="11" cy="11" r="7" />
+                    <path d="M16.5 16.5L21 21" />
+                </svg>
+                <input id="search" type="text" placeholder="搜索当前目录..." autocomplete="off">
+            </div>
+            <button class="btn" id="viewBtn" title="切换视图">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <rect x="3" y="3" width="7" height="7" rx="1.4" />
+                    <rect x="14" y="3" width="7" height="7" rx="1.4" />
+                    <rect x="3" y="14" width="7" height="7" rx="1.4" />
+                    <rect x="14" y="14" width="7" height="7" rx="1.4" />
+                </svg>
+            </button>
+        </div>
+
+        <div class="body">
+            <div class="side">
+                <div class="side-h">数据库导航</div>
+                <div id="tree"></div>
+            </div>
+            <div class="main" id="main"></div>
+        </div>
+
+        <div class="status">
+            <span id="st-left"></span>
+            <span id="st-right"></span>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            "use strict";
+
+            /* ================= 图标（全部内联 SVG） ================= */
+            var COLORS = {
+                root: "#22d3ee",
+                database: "#22d3ee",
+                category: "#8ea0b5",
+                table: "#34d399",
+                view: "#a78bfa",
+                procedure: "#fb923c",
+                index: "#60a5fa",
+                trigger: "#f87171",
+                query: "#f472b6",
+                column: "#94a3b8"
+            };
+
+            var GLYPH = {
+                root: '<ellipse cx="6" cy="3" rx="4.2" ry="1.8"/><path d="M1.8 3v6c0 1 1.88 1.8 4.2 1.8S10.2 10 10.2 9V3"/><path d="M1.8 6c0 1 1.88 1.8 4.2 1.8S10.2 7 10.2 6"/>',
+                database: '<ellipse cx="6" cy="3" rx="4.2" ry="1.8"/><path d="M1.8 3v6c0 1 1.88 1.8 4.2 1.8S10.2 10 10.2 9V3"/><path d="M1.8 6c0 1 1.88 1.8 4.2 1.8S10.2 7 10.2 6"/>',
+                category: '<rect x="1.6" y="1.6" width="8.8" height="8.8" rx="1.4"/>',
+                table: '<rect x="1.6" y="1.6" width="8.8" height="8.8" rx="1.4"/><path d="M1.6 4.6h8.8M4.6 1.6v8.8"/>',
+                view: '<path d="M1 6s1.9-3.4 5-3.4S11 6 11 6s-1.9 3.4-5 3.4S1 6 1 6z"/><circle cx="6" cy="6" r="1.5"/>',
+                procedure: '<circle cx="6" cy="6" r="2.3"/><path d="M6 1.1v1.7M6 9.2v1.7M1.1 6h1.7M9.2 6h1.7"/>',
+                index: '<path d="M1.8 3h8.4M1.8 6h8.4M1.8 9h4.6"/>',
+                trigger: '<path d="M6.9 1L2 6.7h3.2l-1.1 4.3L10 5.3H6.8z" fill="currentColor" stroke="none"/>',
+                query: '<circle cx="5.4" cy="5.4" r="3.4"/><path d="M8 8l2.8 2.8"/>',
+                column: '<circle cx="2.2" cy="3.2" r=".9" fill="currentColor" stroke="none"/><path d="M4.6 3.2h5.8"/><circle cx="2.2" cy="6.2" r=".9" fill="currentColor" stroke="none"/><path d="M4.6 6.2h5.8"/><circle cx="2.2" cy="9.2" r=".9" fill="currentColor" stroke="none"/><path d="M4.6 9.2h4.4"/>'
+            };
+
+            function glyphSVG(key, scale, color) {
+                var s = scale || 1;
+                var t = 6 - 6 * s;
+                return '<g transform="translate(' + t.toFixed(2) + ' ' + t.toFixed(2) + ') scale(' + s + ')"' +
+                    ' color="' + color + '" stroke="currentColor" fill="none" stroke-width="1.6"' +
+                    ' stroke-linecap="round" stroke-linejoin="round">' + (GLYPH[key] || GLYPH.category) + '</g>';
+            }
+
+            /* 文件夹图标：Windows 经典琥珀色文件夹 + 右下角类型徽标 */
+            function folderSVG(key) {
+                var color = COLORS[key] || COLORS.category;
+                return '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">' +
+                    '<path d="M2.4 5.6A1.6 1.6 0 0 1 4 4h4.9l2.3 2.5h9.2A1.6 1.6 0 0 1 22 8.1v10.3a1.6 1.6 0 0 1-1.6 1.6H4a1.6 1.6 0 0 1-1.6-1.6z" fill="#8a5f18"/>' +
+                    '<path d="M2.4 10.4H22v8a1.6 1.6 0 0 1-1.6 1.6H4a1.6 1.6 0 0 1-1.6-1.6z" fill="#e6ac33"/>' +
+                    '<path d="M2.4 10.4H22" stroke="#bb8a25" stroke-width="1"/>' +
+                    '<circle cx="17.4" cy="17.2" r="5" fill="' + color + '" stroke="#0b1017" stroke-width="1.4"/>' +
+                    glyphSVG(key, 0.52, "#0b1017") +
+                    '</svg>';
+            }
+
+            /* 文件图标：圆角底板 + 类型符号 */
+            function fileSVG(key) {
+                var color = COLORS[key] || COLORS.column;
+                return '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">' +
+                    '<rect x="3.4" y="2.4" width="17.2" height="19.2" rx="4.6" fill="' + color + '1f" stroke="' +
+                    color + '73" stroke-width="1.2"/>' +
+                    glyphSVG(key, 0.82, color) +
+                    '</svg>';
+            }
+
+            function iconSVG(node) {
+                var key = node.ico || node.kind;
+                var hasKids = node.children && node.children.length > 0;
+                return hasKids ? folderSVG(key) : fileSVG(key);
+            }
+
+            /* ================= 数据 ================= */
+            function col(name, type, o) {
+                o = o || {};
+                var props = [["字段类型", type], ["允许空值", o.nn ? "否" : "是"]];
+                if (o.pk) props.push(["键类型", "PRIMARY KEY"]);
+                else if (o.uk) props.push(["键类型", "UNIQUE"]);
+                else if (o.idx) props.push(["索引", "普通索引 INDEX"]);
+                if (o.def !== undefined) props.push(["默认值", o.def]);
+                if (o.note) props.push(["说明", o.note]);
+                return { name: name, kind: "column", props: props };
+            }
+
+            function cols(arr) {
+                return arr.map(function (a) { return col(a[0], a[1], a[2]); });
+            }
+
+            function tbl(name, meta, arr) {
+                return { name: name, kind: "table", props: meta, children: cols(arr) };
+            }
+
+            function cat(name, kind, children) {
+                return { name: name, kind: "category", ico: kind, children: children };
+            }
+
+            /* --- 数据库 1：shop_db --- */
+            var shop = {
+                name: "shop_db",
+                kind: "database",
+                props: [["引擎", "InnoDB"], ["字符集", "utf8mb4_general_ci"], ["排序规则", "utf8mb4"], ["大小", "486 MB"], ["表数量", "6"]],
+                children: [
+                    cat("表", "table", [
+                        tbl("users", [["行数", "12,486"], ["数据大小", "3.2 MB"], ["引擎", "InnoDB"], ["主键", "id"]], [
+                            ["id", "BIGINT", { pk: 1, note: "自增主键" }],
+                            ["username", "VARCHAR(32)", { uk: 1, note: "登录名" }],
+                            ["email", "VARCHAR(128)", { idx: 1 }],
+                            ["password_hash", "CHAR(60)", { nn: 1 }],
+                            ["status", "TINYINT", { def: "1", note: "1 启用 / 0 禁用" }],
+                            ["created_at", "DATETIME", { def: "CURRENT_TIMESTAMP" }]
+                        ]),
+                        tbl("orders", [["行数", "86,341"], ["数据大小", "48.6 MB"], ["引擎", "InnoDB"], ["主键", "id"]], [
+                            ["id", "BIGINT", { pk: 1 }],
+                            ["order_no", "VARCHAR(32)", { uk: 1 }],
+                            ["user_id", "BIGINT", { idx: 1 }],
+                            ["total_amount", "DECIMAL(12,2)", { def: "0.00" }],
+                            ["pay_status", "TINYINT", { def: "0", note: "0 待支付 / 1 已支付" }],
+                            ["created_at", "DATETIME", { def: "CURRENT_TIMESTAMP" }]
+                        ]),
+                        tbl("order_items", [["行数", "142,905"], ["数据大小", "64.1 MB"], ["引擎", "InnoDB"], ["主键", "id"]], [
+                            ["id", "BIGINT", { pk: 1 }],
+                            ["order_id", "BIGINT", { idx: 1 }],
+                            ["product_id", "BIGINT", { idx: 1 }],
+                            ["quantity", "INT", { def: "1" }],
+                            ["unit_price", "DECIMAL(10,2)", { nn: 1 }]
+                        ]),
+                        tbl("products", [["行数", "3,204"], ["数据大小", "5.8 MB"], ["引擎", "InnoDB"], ["主键", "id"]], [
+                            ["id", "BIGINT", { pk: 1 }],
+                            ["sku", "VARCHAR(64)", { uk: 1 }],
+                            ["title", "VARCHAR(200)", { nn: 1 }],
+                            ["category_id", "INT", { idx: 1 }],
+                            ["price", "DECIMAL(10,2)", { nn: 1 }],
+                            ["stock", "INT", { def: "0" }],
+                            ["updated_at", "DATETIME", { def: "CURRENT_TIMESTAMP" }]
+                        ]),
+                        tbl("categories", [["行数", "68"], ["数据大小", "96 KB"], ["引擎", "InnoDB"], ["主键", "id"]], [
+                            ["id", "INT", { pk: 1 }],
+                            ["name", "VARCHAR(64)", { nn: 1 }],
+                            ["parent_id", "INT", { idx: 1, note: "0 表示一级分类" }],
+                            ["sort", "INT", { def: "0" }]
+                        ]),
+                        tbl("payments", [["行数", "79,552"], ["数据大小", "22.4 MB"], ["引擎", "InnoDB"], ["主键", "id"]], [
+                            ["id", "BIGINT", { pk: 1 }],
+                            ["order_id", "BIGINT", { idx: 1 }],
+                            ["channel", "VARCHAR(16)", { nn: 1, note: "alipay / wechat" }],
+                            ["amount", "DECIMAL(12,2)", { nn: 1 }],
+                            ["paid_at", "DATETIME", { def: "CURRENT_TIMESTAMP" }]
+                        ])
+                    ]),
+                    cat("视图", "view", [
+                        {
+                            name: "v_order_detail", kind: "view",
+                            props: [["视图类型", "普通视图"], ["可更新", "否"], ["创建时间", "2026-03-11 09:24"]],
+                            children: cols([
+                                ["order_no", "VARCHAR(32)"],
+                                ["username", "VARCHAR(32)"],
+                                ["total_amount", "DECIMAL(12,2)"],
+                                ["item_count", "INT"],
+                                ["created_at", "DATETIME"]
+                            ]),
+                            def: "CREATE VIEW `v_order_detail` AS\nSELECT o.order_no, u.username, o.total_amount,\n       COUNT(i.id) AS item_count, o.created_at\nFROM orders o\nJOIN users u ON u.id = o.user_id\nLEFT JOIN order_items i ON i.order_id = o.id\nGROUP BY o.id;"
+                        },
+                        {
+                            name: "v_product_stock", kind: "view",
+                            props: [["视图类型", "普通视图"], ["可更新", "否"], ["创建时间", "2026-04-02 14:07"]],
+                            children: cols([
+                                ["sku", "VARCHAR(64)"],
+                                ["title", "VARCHAR(200)"],
+                                ["category", "VARCHAR(64)"],
+                                ["stock", "INT"],
+                                ["stock_state", "VARCHAR(8)"]
+                            ]),
+                            def: "CREATE VIEW `v_product_stock` AS\nSELECT p.sku, p.title, c.name AS category, p.stock,\n       CASE WHEN p.stock > 0 THEN 'IN' ELSE 'OUT' END AS stock_state\nFROM products p LEFT JOIN categories c ON c.id = p.category_id;"
+                        }
+                    ]),
+                    cat("存储过程", "procedure", [
+                        {
+                            name: "sp_create_order", kind: "procedure",
+                            props: [["参数个数", "4"], ["返回结果", "创建结果集"], ["创建时间", "2026-02-18 11:02"]],
+                            children: [
+                                col("p_user_id", "IN BIGINT", { nn: 1, note: "下单用户 ID" }),
+                                col("p_product_id", "IN BIGINT", { nn: 1, note: "商品 ID" }),
+                                col("p_quantity", "IN INT", { def: "1" }),
+                                col("p_order_no", "OUT VARCHAR(32)", { note: "生成的订单号" })
+                            ],
+                            def: "CREATE PROCEDURE `sp_create_order`(\n    IN p_user_id BIGINT,\n    IN p_product_id BIGINT,\n    IN p_quantity INT,\n    OUT p_order_no VARCHAR(32)\n)\nBEGIN\n    DECLARE v_stock INT;\n    START TRANSACTION;\n    SELECT stock INTO v_stock FROM products WHERE id = p_product_id FOR UPDATE;\n    IF v_stock >= p_quantity THEN\n        SET p_order_no = CONCAT('SO', UNIX_TIMESTAMP(), FLOOR(RAND() * 9000 + 1000));\n        INSERT INTO orders(order_no, user_id, total_amount, created_at)\n        VALUES (p_order_no, p_user_id, 0, NOW());\n        UPDATE products SET stock = stock - p_quantity WHERE id = p_product_id;\n        COMMIT;\n    ELSE\n        ROLLBACK;\n        SET p_order_no = NULL;\n    END IF;\nEND;"
+                        },
+                        {
+                            name: "sp_calc_coupon", kind: "procedure",
+                            props: [["参数个数", "2"], ["返回结果", "折扣金额"], ["创建时间", "2026-05-06 16:41"]],
+                            children: [
+                                col("p_user_id", "IN BIGINT", { nn: 1 }),
+                                col("p_amount", "IN DECIMAL(12,2)", { nn: 1 }),
+                                col("p_discount", "OUT DECIMAL(12,2)")
+                            ],
+                            def: "CREATE PROCEDURE `sp_calc_coupon`(\n    IN p_user_id BIGINT,\n    IN p_amount DECIMAL(12,2),\n    OUT p_discount DECIMAL(12,2)\n)\nBEGIN\n    DECLARE v_level TINYINT DEFAULT 0;\n    SELECT COUNT(*) INTO v_level FROM orders WHERE user_id = p_user_id;\n    SET p_discount = IF(v_level >= 10, p_amount * 0.9, p_amount);\nEND;"
+                        }
+                    ]),
+                    cat("索引", "index", [
+                        {
+                            name: "uk_users_username", kind: "index",
+                            props: [["索引类型", "BTREE"], ["是否唯一", "唯一索引"], ["所属表", "users"], ["基数", "12,486"]],
+                            children: [col("username", "VARCHAR(32)", { nn: 1, note: "唯一" })]
+                        },
+                        {
+                            name: "idx_orders_user_time", kind: "index",
+                            props: [["索引类型", "BTREE"], ["是否唯一", "普通索引"], ["所属表", "orders"], ["基数", "8,412"]],
+                            children: [
+                                col("user_id", "BIGINT", {}),
+                                col("created_at", "DATETIME", { note: "降序存储" })
+                            ]
+                        },
+                        {
+                            name: "idx_products_category", kind: "index",
+                            props: [["索引类型", "BTREE"], ["是否唯一", "普通索引"], ["所属表", "products"], ["基数", "42"]],
+                            children: [col("category_id", "INT", {})]
+                        }
+                    ]),
+                    cat("触发器", "trigger", [
+                        {
+                            name: "trg_orders_after_insert", kind: "trigger",
+                            props: [["触发时机", "AFTER INSERT"], ["触发事件表", "orders"], ["创建时间", "2026-03-20 10:15"]],
+                            def: "CREATE TRIGGER `trg_orders_after_insert`\nAFTER INSERT ON `orders`\nFOR EACH ROW\nBEGIN\n    INSERT INTO payments(order_id, channel, amount, paid_at)\n    VALUES (NEW.id, 'alipay', 0, NOW());\nEND;"
+                        },
+                        {
+                            name: "trg_products_before_update", kind: "trigger",
+                            props: [["触发时机", "BEFORE UPDATE"], ["触发事件表", "products"], ["创建时间", "2026-04-27 20:38"]],
+                            def: "CREATE TRIGGER `trg_products_before_update`\nBEFORE UPDATE ON `products`\nFOR EACH ROW\nBEGIN\n    IF NEW.stock < 0 THEN\n        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = '库存不能为负数';\n    END IF;\n    SET NEW.updated_at = NOW();\nEND;"
+                        }
+                    ]),
+                    cat("查询", "query", [
+                        {
+                            name: "q_top_selling.sql", kind: "query",
+                            props: [["查询类型", "SELECT"], ["最近执行", "2026-10-18 22:14"], ["平均耗时", "38 ms"]],
+                            def: "-- 销量 Top 20 商品\nSELECT p.id, p.title, SUM(i.quantity) AS sold\nFROM order_items i\nJOIN products p ON p.id = i.product_id\nGROUP BY p.id\nORDER BY sold DESC\nLIMIT 20;"
+                        },
+                        {
+                            name: "q_daily_revenue.sql", kind: "query",
+                            props: [["查询类型", "SELECT"], ["最近执行", "2026-10-19 08:31"], ["平均耗时", "112 ms"]],
+                            def: "-- 每日营收统计\nSELECT DATE(created_at) AS day,\n       COUNT(*) AS orders,\n       SUM(total_amount) AS revenue\nFROM orders\nWHERE pay_status = 1\n  AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)\nGROUP BY day\nORDER BY day DESC;"
+                        },
+                        {
+                            name: "q_stale_cart.sql", kind: "query",
+                            props: [["查询类型", "SELECT"], ["最近执行", "2026-10-17 19:02"], ["平均耗时", "46 ms"]],
+                            def: "-- 超过 7 天未支付的订单\nSELECT o.order_no, u.username, o.total_amount\nFROM orders o\nJOIN users u ON u.id = o.user_id\nWHERE o.pay_status = 0\n  AND o.created_at < DATE_SUB(NOW(), INTERVAL 7 DAY);"
+                        }
+                    ])
+                ]
+            };
+
+            /* --- 数据库 2：log_db --- */
+            var logdb = {
+                name: "log_db",
+                kind: "database",
+                props: [["引擎", "InnoDB"], ["字符集", "utf8mb4"], ["大小", "2.1 GB"], ["表数量", "4"]],
+                children: [
+                    cat("表", "table", [
+                        tbl("logs", [["行数", "3,846,201"], ["数据大小", "1.4 GB"], ["引擎", "InnoDB"], ["主键", "id"]], [
+                            ["id", "BIGINT", { pk: 1 }],
+                            ["ts", "DATETIME(3)", { idx: 1, note: "毫秒精度" }],
+                            ["level", "ENUM", { idx: 1, note: "DEBUG/INFO/WARN/ERROR" }],
+                            ["service", "VARCHAR(32)", { idx: 1 }],
+                            ["trace_id", "CHAR(32)", { idx: 1 }],
+                            ["message", "TEXT", {}]
+                        ]),
+                        tbl("api_requests", [["行数", "1,204,882"], ["数据大小", "512 MB"], ["引擎", "InnoDB"], ["主键", "id"]], [
+                            ["id", "BIGINT", { pk: 1 }],
+                            ["ts", "DATETIME(3)", { idx: 1 }],
+                            ["path", "VARCHAR(255)", { idx: 1 }],
+                            ["method", "CHAR(6)", {}],
+                            ["status", "SMALLINT", {}],
+                            ["duration_ms", "INT", {}],
+                            ["user_id", "BIGINT", {}]
+                        ]),
+                        tbl("sessions", [["行数", "48,320"], ["数据大小", "18 MB"], ["引擎", "InnoDB"], ["主键", "id"]], [
+                            ["id", "CHAR(32)", { pk: 1 }],
+                            ["user_id", "BIGINT", { idx: 1 }],
+                            ["ip", "VARCHAR(45)", {}],
+                            ["ua", "VARCHAR(255)", {}],
+                            ["start_at", "DATETIME", {}],
+                            ["end_at", "DATETIME", { note: "NULL 表示仍在线" }]
+                        ]),
+                        tbl("errors", [["行数", "26,715"], ["数据大小", "22 MB"], ["引擎", "InnoDB"], ["主键", "id"]], [
+                            ["id", "BIGINT", { pk: 1 }],
+                            ["ts", "DATETIME(3)", { idx: 1 }],
+                            ["code", "VARCHAR(64)", { idx: 1 }],
+                            ["service", "VARCHAR(32)", {}],
+                            ["stack", "TEXT", {}]
+                        ])
+                    ]),
+                    cat("视图", "view", [
+                        {
+                            name: "v_error_trend", kind: "view",
+                            props: [["视图类型", "普通视图"], ["可更新", "否"], ["创建时间", "2026-06-08 12:33"]],
+                            children: cols([
+                                ["day", "DATE"],
+                                ["service", "VARCHAR(32)"],
+                                ["error_count", "BIGINT"],
+                                ["rate", "DECIMAL(6,3)"]
+                            ]),
+                            def: "CREATE VIEW `v_error_trend` AS\nSELECT DATE(ts) AS day, service, COUNT(*) AS error_count,\n       COUNT(*) / 1000 AS rate\nFROM errors\nGROUP BY day, service;"
+                        }
+                    ]),
+                    cat("存储过程", "procedure", [
+                        {
+                            name: "sp_purge_logs", kind: "procedure",
+                            props: [["参数个数", "1"], ["返回结果", "删除行数"], ["创建时间", "2026-07-21 10:00"]],
+                            children: [
+                                col("p_keep_days", "IN INT", { def: "30", note: "保留最近天数" }),
+                                col("p_deleted", "OUT BIGINT")
+                            ],
+                            def: "CREATE PROCEDURE `sp_purge_logs`(\n    IN p_keep_days INT,\n    OUT p_deleted BIGINT\n)\nBEGIN\n    DELETE FROM logs WHERE ts < DATE_SUB(NOW(), INTERVAL p_keep_days DAY);\n    SET p_deleted = ROW_COUNT();\nEND;"
+                        }
+                    ]),
+                    cat("索引", "index", [
+                        {
+                            name: "idx_logs_ts_level", kind: "index",
+                            props: [["索引类型", "BTREE"], ["是否唯一", "普通索引"], ["所属表", "logs"], ["基数", "3,201,447"]],
+                            children: [col("ts", "DATETIME(3)", {}), col("level", "ENUM", {})]
+                        },
+                        {
+                            name: "idx_api_path_status", kind: "index",
+                            props: [["索引类型", "BTREE"], ["是否唯一", "普通索引"], ["所属表", "api_requests"], ["基数", "1,204,882"]],
+                            children: [col("path", "VARCHAR(255)", {}), col("status", "SMALLINT", {})]
+                        }
+                    ]),
+                    cat("触发器", "trigger", [
+                        {
+                            name: "trg_session_close", kind: "trigger",
+                            props: [["触发时机", "BEFORE UPDATE"], ["触发事件表", "sessions"], ["创建时间", "2026-08-02 09:12"]],
+                            def: "CREATE TRIGGER `trg_session_close`\nBEFORE UPDATE ON `sessions`\nFOR EACH ROW\nBEGIN\n    IF NEW.end_at IS NULL AND TIMESTAMPDIFF(HOUR, OLD.start_at, NOW()) > 24 THEN\n        SET NEW.end_at = NOW();\n    END IF;\nEND;"
+                        }
+                    ]),
+                    cat("查询", "query", [
+                        {
+                            name: "q_5xx_rate.sql", kind: "query",
+                            props: [["查询类型", "SELECT"], ["最近执行", "2026-10-19 07:55"], ["平均耗时", "204 ms"]],
+                            def: "-- 最近 1 小时 5xx 占比\nSELECT path,\n       SUM(status >= 500) / COUNT(*) AS err_rate\nFROM api_requests\nWHERE ts >= DATE_SUB(NOW(), INTERVAL 1 HOUR)\nGROUP BY path\nHAVING err_rate > 0.01\nORDER BY err_rate DESC;"
+                        },
+                        {
+                            name: "q_slow_api.sql", kind: "query",
+                            props: [["查询类型", "SELECT"], ["最近执行", "2026-10-18 23:10"], ["平均耗时", "318 ms"]],
+                            def: "-- 慢接口排行\nSELECT path, method,\n       AVG(duration_ms) AS avg_ms,\n       MAX(duration_ms) AS max_ms\nFROM api_requests\nWHERE ts >= DATE_SUB(NOW(), INTERVAL 1 DAY)\nGROUP BY path, method\nORDER BY avg_ms DESC\nLIMIT 15;"
+                        }
+                    ])
+                ]
+            };
+
+            /* --- 数据库 3：hr_db --- */
+            var hrdb = {
+                name: "hr_db",
+                kind: "database",
+                props: [["引擎", "InnoDB"], ["字符集", "utf8mb4"], ["大小", "128 MB"], ["表数量", "4"]],
+                children: [
+                    cat("表", "table", [
+                        tbl("employees", [["行数", "862"], ["数据大小", "1.2 MB"], ["引擎", "InnoDB"], ["主键", "id"]], [
+                            ["id", "INT", { pk: 1 }],
+                            ["emp_no", "VARCHAR(16)", { uk: 1 }],
+                            ["name", "VARCHAR(32)", { nn: 1 }],
+                            ["dept_id", "INT", { idx: 1 }],
+                            ["hire_date", "DATE", {}],
+                            ["status", "TINYINT", { def: "1", note: "1 在职 / 0 离职" }]
+                        ]),
+                        tbl("departments", [["行数", "36"], ["数据大小", "64 KB"], ["引擎", "InnoDB"], ["主键", "id"]], [
+                            ["id", "INT", { pk: 1 }],
+                            ["name", "VARCHAR(64)", { nn: 1 }],
+                            ["manager_id", "INT", { idx: 1 }],
+                            ["parent_id", "INT", { idx: 1 }]
+                        ]),
+                        tbl("salaries", [["行数", "9,148"], ["数据大小", "11 MB"], ["引擎", "InnoDB"], ["主键", "id"]], [
+                            ["id", "BIGINT", { pk: 1 }],
+                            ["emp_id", "INT", { idx: 1 }],
+                            ["month", "CHAR(7)", { idx: 1, note: "格式 YYYY-MM" }],
+                            ["base", "DECIMAL(10,2)", {}],
+                            ["bonus", "DECIMAL(10,2)", { def: "0.00" }],
+                            ["total", "DECIMAL(10,2)", {}]
+                        ]),
+                        tbl("attendances", [["行数", "18,204"], ["数据大小", "9.6 MB"], ["引擎", "InnoDB"], ["主键", "id"]], [
+                            ["id", "BIGINT", { pk: 1 }],
+                            ["emp_id", "INT", { idx: 1 }],
+                            ["date", "DATE", { idx: 1 }],
+                            ["check_in", "TIME", {}],
+                            ["check_out", "TIME", {}],
+                            ["status", "TINYINT", { def: "1", note: "1 正常 / 2 迟到 / 3 缺勤" }]
+                        ])
+                    ]),
+                    cat("视图", "view", [
+                        {
+                            name: "v_emp_dept", kind: "view",
+                            props: [["视图类型", "普通视图"], ["可更新", "否"], ["创建时间", "2026-05-19 15:22"]],
+                            children: cols([
+                                ["emp_no", "VARCHAR(16)"],
+                                ["name", "VARCHAR(32)"],
+                                ["dept_name", "VARCHAR(64)"],
+                                ["hire_date", "DATE"]
+                            ]),
+                            def: "CREATE VIEW `v_emp_dept` AS\nSELECT e.emp_no, e.name, d.name AS dept_name, e.hire_date\nFROM employees e LEFT JOIN departments d ON d.id = e.dept_id\nWHERE e.status = 1;"
+                        }
+                    ]),
+                    cat("存储过程", "procedure", [
+                        {
+                            name: "sp_month_salary", kind: "procedure",
+                            props: [["参数个数", "2"], ["返回结果", "该月薪酬明细"], ["创建时间", "2026-09-01 09:40"]],
+                            children: [
+                                col("p_month", "IN CHAR(7)", { nn: 1, note: "YYYY-MM" }),
+                                col("p_dept_id", "IN INT", { note: "0 表示全部部门" })
+                            ],
+                            def: "CREATE PROCEDURE `sp_month_salary`(\n    IN p_month CHAR(7),\n    IN p_dept_id INT\n)\nBEGIN\n    SELECT e.emp_no, e.name, s.base, s.bonus, s.total\n    FROM salaries s\n    JOIN employees e ON e.id = s.emp_id\n    WHERE s.month = p_month\n      AND (p_dept_id = 0 OR e.dept_id = p_dept_id);\nEND;"
+                        }
+                    ]),
+                    cat("索引", "index", [
+                        {
+                            name: "uk_employees_emp_no", kind: "index",
+                            props: [["索引类型", "BTREE"], ["是否唯一", "唯一索引"], ["所属表", "employees"], ["基数", "862"]],
+                            children: [col("emp_no", "VARCHAR(16)", { nn: 1 })]
+                        },
+                        {
+                            name: "idx_salaries_month_emp", kind: "index",
+                            props: [["索引类型", "BTREE"], ["是否唯一", "普通索引"], ["所属表", "salaries"], ["基数", "9,148"]],
+                            children: [col("month", "CHAR(7)", {}), col("emp_id", "INT", {})]
+                        }
+                    ]),
+                    cat("触发器", "trigger", [
+                        {
+                            name: "trg_salary_audit", kind: "trigger",
+                            props: [["触发时机", "AFTER INSERT"], ["触发事件表", "salaries"], ["创建时间", "2026-09-11 14:05"]],
+                            def: "CREATE TRIGGER `trg_salary_audit`\nAFTER INSERT ON `salaries`\nFOR EACH ROW\nBEGIN\n    UPDATE salaries\n    SET total = NEW.base + NEW.bonus\n    WHERE id = NEW.id;\nEND;"
+                        }
+                    ]),
+                    cat("查询", "query", [
+                        {
+                            name: "q_avg_salary.sql", kind: "query",
+                            props: [["查询类型", "SELECT"], ["最近执行", "2026-10-16 17:48"], ["平均耗时", "24 ms"]],
+                            def: "-- 各部门平均薪酬\nSELECT d.name AS dept, AVG(s.total) AS avg_salary\nFROM salaries s\nJOIN employees e ON e.id = s.emp_id\nJOIN departments d ON d.id = e.dept_id\nWHERE s.month = '2026-09'\nGROUP BY d.name\nORDER BY avg_salary DESC;"
+                        }
+                    ])
+                ]
+            };
+
+            var ROOT = {
+                name: "数据库服务器",
+                kind: "root",
+                props: [["主机地址", "127.0.0.1:3306"], ["版本", "MySQL 8.0.36"], ["连接用户", "root@localhost"], ["数据库数量", "3"]],
+                children: [shop, logdb, hrdb]
+            };
+
+            var TYPE_LABEL = {
+                root: "服务器", database: "数据库", category: "分类", table: "数据表",
+                view: "视图", procedure: "存储过程", index: "索引", trigger: "触发器",
+                query: "查询脚本", column: "字段"
+            };
+
+            /* ================= 状态 ================= */
+            var state = { hist: [[ROOT]], hidx: 0, view: "grid", q: "", selKey: null };
+            var nodeByKey = {};
+            var openSet = {};
+            openSet[keyOf([ROOT])] = true;
+            [shop, logdb, hrdb].forEach(function (d) { openSet[keyOf([ROOT, d])] = true; });
+
+            function keyOf(path) {
+                return path.map(function (n) { return n.name; }).join(" / ");
+            }
+
+            function curPath() { return state.hist[state.hidx]; }
+            function cur() { return curPath()[curPath().length - 1]; }
+
+            function navigate(node) {
+                pushHistory(curPath().concat([node]));
+            }
+
+            function pushHistory(path) {
+                state.hist = state.hist.slice(0, state.hidx + 1);
+                state.hist.push(path);
+                state.hidx = state.hist.length - 1;
+                state.selKey = keyOf(path);
+                resetFilter();
+                render();
+            }
+
+            function goToIndex(i) {
+                if (i < 0 || i >= state.hist.length) return;
+                state.hidx = i;
+                state.selKey = keyOf(curPath());
+                resetFilter();
+                render();
+            }
+
+            function resetFilter() {
+                state.q = "";
+                document.getElementById("search").value = "";
+            }
+
+            function esc(s) {
+                return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            }
+
+            /* ================= 渲染 ================= */
+            function render() {
+                var main = document.getElementById("main");
+                nodeByKey = {};
+
+                renderAddr();
+                renderTree();
+                renderMain(cur(), curPath());
+                renderStatus();
+
+                main.scrollTop = 0;
+            }
+
+            function renderAddr() {
+                var p = curPath();
+                var html = "";
+                p.forEach(function (n, i) {
+                    if (i > 0) html += '<span class="sep">›</span>';
+                    html += '<span class="crumb' + (i === p.length - 1 ? " cur" : "") + '" data-i="' + i + '">' +
+                        folderSVG(n.ico || n.kind).replace('viewBox="0 0 24 24"', 'viewBox="0 0 24 24" width="15" height="15"') +
+                        "<span>" + esc(n.name) + "</span></span>";
+                });
+                document.getElementById("addr").innerHTML = html;
+
+                document.getElementById("back").disabled = state.hidx === 0;
+                document.getElementById("fwd").disabled = state.hidx >= state.hist.length - 1;
+                document.getElementById("up").disabled = p.length <= 1;
+            }
+
+            function renderTree() {
+                document.getElementById("tree").innerHTML = treeHTML([ROOT], 0);
+            }
+
+            function treeHTML(path, depth) {
+                var node = path[path.length - 1];
+                var key = keyOf(path);
+                nodeByKey[key] = { node: node, path: path };
+                var isOpen = !!openSet[key];
+                var hasKids = node.children && node.children.length > 0;
+
+                var html = '<div class="tn' + (state.selKey === key ? " on" : "") + '" data-key="' + esc(key) +
+                    '" style="padding-left:' + (4 + depth * 15) + 'px">' +
+                    '<span class="arw' + (hasKids ? "" : " leaf") + (isOpen ? " open" : "") + '" data-toggle="1">' +
+                    '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>' +
+                    "</span>" +
+                    '<span class="tico">' + iconSVG(node) + "</span>" +
+                    '<span class="tname">' + esc(node.name) + "</span></div>";
+
+                if (hasKids && isOpen) {
+                    html += node.children.map(function (c) {
+                        return treeHTML(path.concat([c]), depth + 1);
+                    }).join("");
+                }
+                return html;
+            }
+
+            function filtered(node) {
+                var list = node.children || [];
+                if (!state.q) return list;
+                var q = state.q.toLowerCase();
+                return list.filter(function (n) { return n.name.toLowerCase().indexOf(q) > -1; });
+            }
+
+            function subLabel(node) {
+                var t = TYPE_LABEL[node.kind] || "";
+                if (node.kind === "table" && node.props && node.props.length) return node.props[0][1] + " 行";
+                if (node.kind === "database" && node.props) {
+                    var size = node.props.filter(function (p) { return p[0] === "大小"; })[0];
+                    if (size) return size[1];
+                }
+                return t;
+            }
+
+            function renderMain(node, path) {
+                var main = document.getElementById("main");
+                var items = filtered(node);
+                var html = "";
+
+                if (node.props || node.def) html += detailHTML(node);
+                if (items.length === 0) {
+                    html += emptyHTML(node);
+                } else if (state.view === "grid") {
+                    html += gridHTML(items, path);
+                } else {
+                    html += listHTML(items, path);
+                }
+                main.innerHTML = html;
+            }
+
+            function detailHTML(node) {
+                var key = node.ico || node.kind;
+                var h = '<div class="detail"><div class="big">' + iconSVG(node) + "</div><div class=\"dinfo\">" +
+                    "<h2>" + esc(node.name) + "</h2>" +
+                    '<span class="dtype">' + (TYPE_LABEL[node.kind] || node.kind) + "</span>";
+                if (node.props && node.props.length) {
+                    h += '<div class="dprops">' + node.props.map(function (p) {
+                        return '<div class="pp"><span>' + esc(p[0]) + "</span><b>" + esc(p[1]) + "</b></div>";
+                    }).join("") + "</div>";
+                }
+                if (node.def) h += '<div class="sql">' + esc(node.def) + "</div>";
+                return h + "</div></div>";
+            }
+
+            function gridHTML(items, path) {
+                return '<div class="grid">' + items.map(function (n) {
+                    var key = keyOf(path.concat([n]));
+                    nodeByKey[key] = { node: n, path: path.concat([n]) };
+                    return '<div class="tile' + (state.selKey === key ? " on" : "") + '" data-key="' + esc(key) + '">' +
+                        '<div class="sico">' + iconSVG(n) + "</div>" +
+                        '<div class="nm">' + esc(n.name) + "</div>" +
+                        '<div class="sub">' + esc(subLabel(n)) + "</div></div>";
+                }).join("") + "</div>";
+            }
+
+            function listHTML(items, path) {
+                var h = '<div class="list"><div class="lhead"><span>名称</span><span>类型</span>' +
+                    '<span class="c3">详细信息</span><span class="c4">所属</span></div>';
+                h += items.map(function (n) {
+                    var key = keyOf(path.concat([n]));
+                    nodeByKey[key] = { node: n, path: path.concat([n]) };
+                    return '<div class="row' + (state.selKey === key ? " on" : "") + '" data-key="' + esc(key) + '">' +
+                        '<div class="rname">' + iconSVG(n) + "<span>" + esc(n.name) + "</span></div>" +
+                        '<div class="cc">' + esc(TYPE_LABEL[n.kind] || "") + "</div>" +
+                        '<div class="cc c3">' + esc(subLabel(n)) + "</div>" +
+                        '<div class="cc c4">' + esc(cur().name) + "</div></div>";
+                }).join("") + "</div>";
+                return h;
+            }
+
+            function emptyHTML(node) {
+                var isEmptyFolder = !state.q && node.children && node.children.length === 0;
+                var msg;
+                if (state.q) msg = "没有匹配 “" + esc(state.q) + "” 的项目";
+                else if (isEmptyFolder) msg = "该目录为空";
+                else msg = "上方已显示该项目的完整定义信息";
+                return '<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">' +
+                    '<path d="M2.5 7A1.5 1.5 0 0 1 4 5.5h4.6l2.2 2.4h9.2A1.5 1.5 0 0 1 21.5 9.4v8.1A1.5 1.5 0 0 1 20 19H4a1.5 1.5 0 0 1-1.5-1.5z"/></svg>' +
+                    "<div>" + msg + "</div></div>";
+            }
+
+            function renderStatus() {
+                var node = cur();
+                var n = filtered(node).length;
+                document.getElementById("st-left").innerHTML = "共 <b>" + n + "</b> 个项目";
+                var sel = nodeByKey[state.selKey];
+                document.getElementById("st-right").innerHTML = sel ?
+                    "选中：<b>" + esc(sel.node.name) + "</b> · " + (TYPE_LABEL[sel.node.kind] || "") : "位于：" + esc(keyOf(curPath()));
+            }
+
+            /* ================= 交互 ================= */
+            function openKey(key) {
+                var e = nodeByKey[key];
+                if (!e) return;
+                state.selKey = key;
+                navigate(e.node);
+            }
+
+            function selectKey(key) {
+                if (!nodeByKey[key]) return;
+                state.selKey = key;
+                var all = document.querySelectorAll(".tile.on,.row.on,.tn.on");
+                for (var i = 0; i < all.length; i++) all[i].classList.remove("on");
+                var el = document.querySelector('.tile[data-key="' + cssEsc(key) + '"],.row[data-key="' + cssEsc(key) + '"]');
+                if (el) el.classList.add("on");
+                var tn = document.querySelector('.tn[data-key="' + cssEsc(key) + '"]');
+                if (tn) tn.classList.add("on");
+                renderStatus();
+            }
+
+            function cssEsc(s) {
+                return s.replace(/["\\]/g, "\\$&");
+            }
+
+            document.getElementById("main").addEventListener("click", function (ev) {
+                var tile = ev.target.closest(".tile,.row");
+                if (tile) selectKey(tile.dataset.key);
+            });
+
+            document.getElementById("main").addEventListener("dblclick", function (ev) {
+                var tile = ev.target.closest(".tile,.row");
+                if (tile) openKey(tile.dataset.key);
+            });
+
+            document.getElementById("tree").addEventListener("click", function (ev) {
+                var tn = ev.target.closest(".tn");
+                if (!tn) return;
+                var key = tn.dataset.key;
+                if (ev.target.closest(".arw")) {
+                    openSet[key] = !openSet[key];
+                    renderTree();
+                    return;
+                }
+                var e = nodeByKey[key];
+                if (e) { state.selKey = key; navigate(e.node); }
+            });
+
+            document.getElementById("addr").addEventListener("click", function (ev) {
+                var c = ev.target.closest(".crumb");
+                if (c) goToIndex(parseInt(c.dataset.i, 10));
+            });
+
+            document.getElementById("back").addEventListener("click", function () { goToIndex(state.hidx - 1); });
+            document.getElementById("fwd").addEventListener("click", function () { goToIndex(state.hidx + 1); });
+            document.getElementById("up").addEventListener("click", function () {
+                var p = curPath();
+                if (p.length > 1) pushHistory(p.slice(0, -1));
+            });
+            document.getElementById("refresh").addEventListener("click", function () {
+                var main = document.getElementById("main");
+                main.style.opacity = ".35";
+                setTimeout(function () { renderMain(cur(), curPath()); renderStatus(); main.style.opacity = "1"; }, 160);
+            });
+            document.getElementById("viewBtn").addEventListener("click", function () {
+                state.view = state.view === "grid" ? "list" : "grid";
+                renderMain(cur(), curPath());
+                renderStatus();
+            });
+            document.getElementById("search").addEventListener("input", function (ev) {
+                state.q = ev.target.value.trim();
+                renderMain(cur(), curPath());
+                renderStatus();
+            });
+
+            document.addEventListener("keydown", function (ev) {
+                if (ev.target.tagName === "INPUT") {
+                    if (ev.key === "Escape") { ev.target.value = ""; state.q = ""; renderMain(cur(), curPath()); ev.target.blur(); }
+                    return;
+                }
+                if (ev.key === "Enter" && state.selKey) { openKey(state.selKey); }
+                else if (ev.key === "Backspace") {
+                    var p = curPath();
+                    if (p.length > 1) pushHistory(p.slice(0, -1));
+                }
+            });
+
+            /* 初始渲染 */
+            render();
+        })();
+    </script>
+</body>
+
+</html>

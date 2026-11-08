@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>充电桩</title>
+    <link rel="icon" href="./favicon.png" type="image/png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --bg: #07090d;
+            --card: #10151d;
+            --card-2: #161d28;
+            --border: #1f2836;
+            --text: #e8edf4;
+            --text-dim: #8b95a6;
+            --green: #34d399;
+            --cyan: #22d3ee;
+            --orange: #fb923c;
+            --red: #f87171;
+            --gold: #fbbf24;
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            background: var(--bg);
+            background-image: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(34, 211, 238, .08), transparent 60%);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .page {
+            width: 100%;
+            max-width: 480px;
+            padding: 20px 18px 40px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ---------- 顶部 ---------- */
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 22px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand .logo {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(34, 211, 238, .18), rgba(52, 211, 153, .14));
+            border: 1px solid rgba(34, 211, 238, .3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .brand h1 {
+            font-size: 17px;
+            font-weight: 600;
+            letter-spacing: .5px;
+        }
+
+        .brand p {
+            font-size: 11px;
+            color: var(--text-dim);
+            margin-top: 2px;
+        }
+
+        .points-pill {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 8px 14px;
+            border-radius: 999px;
+            cursor: pointer;
+            transition: border-color .2s;
+        }
+
+        .points-pill:hover {
+            border-color: rgba(251, 191, 36, .5);
+        }
+
+        .points-pill .num {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--gold);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .points-pill .label {
+            font-size: 11px;
+            color: var(--text-dim);
+        }
+
+        /* ---------- 状态卡片 ---------- */
+        .station-card {
+            background: linear-gradient(180deg, var(--card-2), var(--card));
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 30px 24px 26px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .station-card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle 300px at 50% -60px, var(--glow, transparent), transparent 70%);
+            pointer-events: none;
+            transition: background .4s;
+        }
+
+        .station-card[data-state="idle"] {
+            --glow: rgba(52, 211, 153, .10);
+        }
+
+        .station-card[data-state="busy"] {
+            --glow: rgba(251, 146, 60, .10);
+        }
+
+        .station-card[data-state="charging"] {
+            --glow: rgba(34, 211, 238, .14);
+        }
+
+        .station-card[data-state="fault"] {
+            --glow: rgba(248, 113, 113, .12);
+        }
+
+        .ring-wrap {
+            position: relative;
+            width: 220px;
+            height: 220px;
+            margin: 0 auto;
+        }
+
+        .ring-wrap svg {
+            transform: rotate(-90deg);
+        }
+
+        .ring-center svg {
+            transform: rotate(0deg);
+        }
+
+        .ring-track {
+            stroke: var(--border);
+        }
+
+        .ring-bar {
+            stroke: url(#ringGrad);
+            stroke-linecap: round;
+            transition: stroke-dashoffset 1s linear;
+        }
+
+        .ring-center {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .ring-center .icon-badge {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--badge-bg, rgba(52, 211, 153, .12));
+            border: 1px solid var(--badge-bd, rgba(52, 211, 153, .35));
+            transition: background .3s, border-color .3s;
+        }
+
+        .station-card[data-state="idle"] .icon-badge {
+            --badge-bg: rgba(52, 211, 153, .12);
+            --badge-bd: rgba(52, 211, 153, .35);
+        }
+
+        .station-card[data-state="busy"] .icon-badge {
+            --badge-bg: rgba(251, 146, 60, .12);
+            --badge-bd: rgba(251, 146, 60, .35);
+        }
+
+        .station-card[data-state="charging"] .icon-badge {
+            --badge-bg: rgba(34, 211, 238, .12);
+            --badge-bd: rgba(34, 211, 238, .4);
+        }
+
+        .station-card[data-state="fault"] .icon-badge {
+            --badge-bg: rgba(248, 113, 113, .12);
+            --badge-bd: rgba(248, 113, 113, .4);
+        }
+
+        .status-name {
+            font-size: 21px;
+            font-weight: 700;
+            margin-top: 16px;
+        }
+
+        .status-desc {
+            font-size: 13px;
+            color: var(--text-dim);
+            margin-top: 6px;
+            line-height: 1.6;
+        }
+
+        .status-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            padding: 4px 12px;
+            border-radius: 999px;
+            margin-bottom: 4px;
+        }
+
+        .status-tag .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .station-card[data-state="idle"] .status-tag {
+            color: var(--green);
+            background: rgba(52, 211, 153, .1);
+        }
+
+        .station-card[data-state="busy"] .status-tag {
+            color: var(--orange);
+            background: rgba(251, 146, 60, .1);
+        }
+
+        .station-card[data-state="charging"] .status-tag {
+            color: var(--cyan);
+            background: rgba(34, 211, 238, .1);
+        }
+
+        .station-card[data-state="fault"] .status-tag {
+            color: var(--red);
+            background: rgba(248, 113, 113, .1);
+        }
+
+        .station-card[data-state="charging"] .status-tag .dot,
+        .station-card[data-state="fault"] .status-tag .dot {
+            animation: blink 1.2s ease-in-out infinite;
+        }
+
+        .station-card[data-state="fault"] .ring-bar {
+            stroke: var(--red);
+        }
+
+        @keyframes blink {
+            50% {
+                opacity: .25;
+            }
+        }
+
+        .countdown {
+            font-size: 34px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 1px;
+            color: var(--cyan);
+        }
+
+        .countdown-label {
+            font-size: 11px;
+            color: var(--text-dim);
+            margin-top: 2px;
+        }
+
+        .charge-metas {
+            display: flex;
+            justify-content: center;
+            gap: 26px;
+            margin-top: 14px;
+        }
+
+        .charge-metas .m {
+            text-align: center;
+        }
+
+        .charge-metas .v {
+            font-size: 16px;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .charge-metas .k {
+            font-size: 11px;
+            color: var(--text-dim);
+            margin-top: 3px;
+        }
+
+        .station-meta-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px dashed var(--border);
+            font-size: 12px;
+            color: var(--text-dim);
+        }
+
+        .station-meta-row b {
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        /* ---------- 按钮 ---------- */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 600;
+            padding: 14px 20px;
+            width: 100%;
+            transition: transform .15s, filter .2s, opacity .2s;
+        }
+
+        .btn:active {
+            transform: scale(.97);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #10b981, #06b6d4);
+            color: #04110d;
+            box-shadow: 0 6px 24px rgba(16, 185, 129, .25);
+        }
+
+        .btn-primary:hover {
+            filter: brightness(1.1);
+        }
+
+        .btn-ghost {
+            background: var(--card-2);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-ghost:hover {
+            border-color: #2c3848;
+        }
+
+        .btn-danger {
+            background: rgba(248, 113, 113, .12);
+            color: var(--red);
+            border: 1px solid rgba(248, 113, 113, .35);
+        }
+
+        .btn-danger:hover {
+            background: rgba(248, 113, 113, .2);
+        }
+
+        .btn-warn {
+            background: linear-gradient(135deg, #f59e0b, #f97316);
+            color: #1a0f02;
+        }
+
+        .btn:disabled {
+            opacity: .45;
+            cursor: not-allowed;
+        }
+
+        .btn[hidden] {
+            display: none;
+        }
+
+        div[hidden] {
+            display: none !important;
+        }
+
+        .action-area {
+            margin-top: 22px;
+        }
+
+        /* ---------- 提示条 ---------- */
+        .toast {
+            position: fixed;
+            left: 50%;
+            top: 24px;
+            transform: translate(-50%, -80px);
+            background: #1a2230;
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-size: 13px;
+            padding: 11px 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, .5);
+            z-index: 200;
+            transition: transform .35s cubic-bezier(.2, .9, .3, 1.2), opacity .3s;
+            opacity: 0;
+            pointer-events: none;
+            max-width: 88vw;
+            text-align: center;
+        }
+
+        .toast.show {
+            transform: translate(-50%, 0);
+            opacity: 1;
+        }
+
+        .toast.ok {
+            border-color: rgba(52, 211, 153, .45);
+        }
+
+        .toast.warn {
+            border-color: rgba(251, 146, 60, .45);
+        }
+
+        .toast.err {
+            border-color: rgba(248, 113, 113, .55);
+        }
+
+        /* ---------- 模态框 ---------- */
+        .mask {
+            position: fixed;
+            inset: 0;
+            background: rgba(2, 4, 8, .66);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .25s;
+        }
+
+        .mask.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .sheet {
+            width: 100%;
+            max-width: 480px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-bottom: none;
+            border-radius: 24px 24px 0 0;
+            padding: 22px 20px calc(24px + env(safe-area-inset-bottom));
+            transform: translateY(100%);
+            transition: transform .3s cubic-bezier(.2, .9, .3, 1);
+            max-height: 86vh;
+            overflow-y: auto;
+        }
+
+        .mask.show .sheet {
+            transform: translateY(0);
+        }
+
+        .sheet-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 18px;
+        }
+
+        .sheet-head h2 {
+            font-size: 17px;
+            font-weight: 700;
+        }
+
+        .close-x {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: var(--card-2);
+            color: var(--text-dim);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .close-x:hover {
+            color: var(--text);
+        }
+
+        /* 时长选择 */
+        .dur-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .dur-item {
+            background: var(--card-2);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 13px 4px;
+            text-align: center;
+            cursor: pointer;
+            transition: all .18s;
+        }
+
+        .dur-item .min {
+            font-size: 17px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .dur-item .cost {
+            font-size: 11px;
+            color: var(--text-dim);
+            margin-top: 4px;
+        }
+
+        .dur-item.active {
+            border-color: var(--cyan);
+            background: rgba(34, 211, 238, .1);
+        }
+
+        .dur-item.active .min {
+            color: var(--cyan);
+        }
+
+        .dur-item.active .cost {
+            color: var(--cyan);
+        }
+
+        .custom-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 12px;
+            background: var(--card-2);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 4px 14px;
+        }
+
+        .custom-row input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text);
+            font-size: 15px;
+            padding: 12px 0;
+            font-family: inherit;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .custom-row .unit {
+            font-size: 13px;
+            color: var(--text-dim);
+            flex-shrink: 0;
+        }
+
+        .cost-summary {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 18px;
+            padding: 14px 16px;
+            background: rgba(251, 191, 36, .06);
+            border: 1px solid rgba(251, 191, 36, .2);
+            border-radius: 14px;
+            font-size: 13px;
+        }
+
+        .cost-summary .need b {
+            color: var(--gold);
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .cost-summary .have {
+            color: var(--text-dim);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .cost-summary .have.short {
+            color: var(--red);
+        }
+
+        /* 充值 */
+        .rate-banner {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(34, 211, 238, .07);
+            border: 1px solid rgba(34, 211, 238, .2);
+            border-radius: 14px;
+            padding: 12px 14px;
+            font-size: 13px;
+            margin-bottom: 16px;
+        }
+
+        .rate-banner b {
+            color: var(--cyan);
+        }
+
+        .recharge-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .amt-item {
+            background: var(--card-2);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px 4px;
+            text-align: center;
+            cursor: pointer;
+            transition: all .18s;
+            position: relative;
+        }
+
+        .amt-item .money {
+            font-size: 19px;
+            font-weight: 700;
+        }
+
+        .amt-item .pts {
+            font-size: 11px;
+            color: var(--gold);
+            margin-top: 4px;
+        }
+
+        .amt-item.active {
+            border-color: var(--gold);
+            background: rgba(251, 191, 36, .08);
+        }
+
+        .amt-item.active .money {
+            color: var(--gold);
+        }
+
+        .recharge-summary {
+            margin-top: 16px;
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-dim);
+        }
+
+        .recharge-summary b {
+            color: var(--gold);
+            font-size: 18px;
+            margin: 0 2px;
+        }
+
+        .sheet .btn {
+            margin-top: 18px;
+        }
+
+        .agreement {
+            margin-top: 12px;
+            text-align: center;
+            font-size: 11px;
+            color: #5b6575;
+        }
+
+        /* 演示工具 */
+        .demo-tools {
+            display: flex;
+            justify-content: center;
+            gap: 14px;
+            margin-top: 26px;
+        }
+
+        .demo-tools button {
+            background: transparent;
+            border: none;
+            color: #4d5866;
+            font-size: 11px;
+            cursor: pointer;
+            text-decoration: underline dotted;
+            font-family: inherit;
+            padding: 6px;
+        }
+
+        .demo-tools button:hover {
+            color: var(--text-dim);
+        }
+
+        @media (min-width: 500px) {
+            .mask {
+                align-items: center;
+                padding: 20px;
+            }
+
+            .sheet {
+                border-radius: 24px;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .mask.show .sheet {
+                transform: translateY(0) scale(1);
+            }
+
+            .sheet {
+                transform: translateY(20px) scale(.98);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="page">
+
+        <!-- 顶部 -->
+        <div class="topbar">
+            <div class="brand">
+                <div class="logo">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <path d="M13 2L4.5 13.5H11L9.5 22L19.5 9.5H12.5L13 2Z" fill="url(#lg)" />
+                        <defs>
+                            <linearGradient id="lg" x1="4" y1="2" x2="20" y2="22">
+                                <stop stop-color="#22d3ee" />
+                                <stop offset="1" stop-color="#34d399" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <div>
+                    <h1>智能充电桩</h1>
+                    <p>扫码即充</p>
+                </div>
+            </div>
+            <div class="points-pill" id="pointsPill" title="点击充值">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="9" stroke="#fbbf24" stroke-width="1.6" />
+                    <path d="M12 7.5V16.5M9.4 9.8h3.6a1.7 1.7 0 0 1 0 3.4H9.4h4a1.7 1.7 0 0 1 0 3.4H9.4"
+                        stroke="#fbbf24" stroke-width="1.5" stroke-linecap="round" />
+                </svg>
+                <span class="num" id="pointsNum">0</span>
+                <span class="label">积分</span>
+            </div>
+        </div>
+
+        <!-- 状态卡片 -->
+        <div class="station-card" id="stationCard" data-state="idle">
+            <div class="ring-wrap">
+                <svg width="220" height="220" viewBox="0 0 220 220">
+                    <defs>
+                        <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+                            <stop stop-color="#22d3ee" />
+                            <stop offset="1" stop-color="#34d399" />
+                        </linearGradient>
+                    </defs>
+                    <circle class="ring-track" cx="110" cy="110" r="100" fill="none" stroke-width="6" />
+                    <circle class="ring-bar" id="ringBar" cx="110" cy="110" r="100" fill="none" stroke-width="6"
+                        stroke-dasharray="628.3" stroke-dashoffset="628.3" />
+                </svg>
+                <div class="ring-center">
+                    <span class="status-tag"><span class="dot"></span><span id="statusTagText">空闲中</span></span>
+
+                    <!-- 空闲 -->
+                    <div class="icon-badge" id="badgeIdle">
+                        <svg width="34" height="34" viewBox="0 0 24 24" fill="none">
+                            <path d="M13 2.5L4.8 13.5H11L9.8 21.5L19.2 10H12.6L13 2.5Z" fill="none" stroke="#34d399"
+                                stroke-width="1.6" stroke-linejoin="round" />
+                        </svg>
+                    </div>
+
+                    <!-- 占用 -->
+                    <div class="icon-badge" id="badgeBusy" hidden>
+                        <svg width="34" height="34" viewBox="0 0 24 24" fill="none">
+                            <path d="M7 3.5v5a5 5 0 0 0 10 0v-5" stroke="#fb923c" stroke-width="1.6"
+                                stroke-linecap="round" />
+                            <path d="M9.5 3.5v4M14.5 3.5v4" stroke="#fb923c" stroke-width="1.6"
+                                stroke-linecap="round" />
+                            <path d="M12 13.5V17" stroke="#fb923c" stroke-width="1.6" stroke-linecap="round" />
+                            <rect x="9" y="17" width="6" height="3.5" rx="1.2" stroke="#fb923c" stroke-width="1.6" />
+                        </svg>
+                    </div>
+
+                    <!-- 充电中 -->
+                    <div class="icon-badge" id="badgeCharging" hidden>
+                        <svg width="34" height="34" viewBox="0 0 24 24" fill="none">
+                            <path d="M13 2L4.5 13.5H11L9.5 22L19.5 9.5H12.5L13 2Z" fill="#22d3ee" />
+                        </svg>
+                    </div>
+
+                    <!-- 故障 -->
+                    <div class="icon-badge" id="badgeFault" hidden>
+                        <svg width="34" height="34" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 3.5L21.5 20H2.5L12 3.5Z" stroke="#f87171" stroke-width="1.6"
+                                stroke-linejoin="round" />
+                            <path d="M12 10v4.5" stroke="#f87171" stroke-width="1.8" stroke-linecap="round" />
+                            <circle cx="12" cy="17.2" r="1" fill="#f87171" />
+                        </svg>
+                    </div>
+
+                    <!-- 充电中倒计时 -->
+                    <div id="countdownBox" hidden>
+                        <div class="countdown" id="countdownText">--:--</div>
+                        <div class="countdown-label">剩余充电时间</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="status-name" id="statusName">充电桩空闲</div>
+            <div class="status-desc" id="statusDesc">设备一切正常，点击下方按钮开始充电</div>
+
+            <!-- 充电中数据 -->
+            <div class="charge-metas" id="chargeMetas" hidden>
+                <div class="m">
+                    <div class="v" id="metaUsed">0</div>
+                    <div class="k">已耗积分</div>
+                </div>
+                <div class="m">
+                    <div class="v" id="metaPower">7.0<span style="font-size:11px"> kW</span></div>
+                    <div class="k">当前功率</div>
+                </div>
+                <div class="m">
+                    <div class="v" id="metaKwh">0.0</div>
+                    <div class="k">已充电量 (度)</div>
+                </div>
+            </div>
+
+            <div class="station-meta-row">
+                <span>桩号 <b>C-07</b></span>
+                <span>功率 <b>7kW 交流</b></span>
+                <span>B区 <b>第2排</b></span>
+            </div>
+        </div>
+
+        <!-- 操作按钮 -->
+        <div class="action-area">
+            <button class="btn btn-primary" id="btnUse" hidden>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+                    <path d="M13 2L4.5 13.5H11L9.5 22L19.5 9.5H12.5L13 2Z" fill="currentColor" />
+                </svg>
+                使用充电桩
+            </button>
+            <button class="btn btn-danger" id="btnStop" hidden>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                    <rect x="6" y="6" width="12" height="12" rx="2" stroke="currentColor" stroke-width="2" />
+                </svg>
+                结束充电
+            </button>
+            <button class="btn btn-danger" id="btnReport" hidden>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                    <path d="M14.5 4.5l5 5L8 21H3v-5L14.5 4.5Z" stroke="currentColor" stroke-width="1.8"
+                        stroke-linejoin="round" />
+                    <path d="M13 6.5l5 5" stroke="currentColor" stroke-width="1.8" />
+                </svg>
+                一键报修
+            </button>
+        </div>
+
+        <!-- 演示工具 -->
+        <div class="demo-tools">
+            <button id="btnSimOccupy">模拟：他人占用 / 释放</button>
+            <button id="btnSimFault">模拟：设备故障 / 修复</button>
+            <button id="btnReset">重置演示数据</button>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- 弹窗：选择时长 -->
+    <div class="mask" id="maskDuration">
+        <div class="sheet">
+            <div class="sheet-head">
+                <h2>选择预计使用时长</h2>
+                <button class="close-x" data-close="maskDuration">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                        <path d="M5 5l14 14M19 5L5 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="dur-grid" id="durGrid">
+                <div class="dur-item active" data-min="30">
+                    <div class="min">30分钟</div>
+                    <div class="cost">30积分</div>
+                </div>
+                <div class="dur-item" data-min="60">
+                    <div class="min">60分钟</div>
+                    <div class="cost">60积分</div>
+                </div>
+                <div class="dur-item" data-min="90">
+                    <div class="min">90分钟</div>
+                    <div class="cost">90积分</div>
+                </div>
+                <div class="dur-item" data-min="120">
+                    <div class="min">120分钟</div>
+                    <div class="cost">120积分</div>
+                </div>
+            </div>
+            <div class="custom-row">
+                <input type="number" id="customMin" inputmode="numeric" min="1" max="600" placeholder="自定义分钟数 (1-600)">
+                <span class="unit">分钟</span>
+            </div>
+
+            <div class="cost-summary">
+                <span class="need">本次预计消耗 <b id="needPoints">30</b> 积分</span>
+                <span class="have" id="havePoints">当前 30 / 30</span>
+            </div>
+
+            <button class="btn btn-primary" id="btnConfirmStart">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+                    <path d="M13 2L4.5 13.5H11L9.5 22L19.5 9.5H12.5L13 2Z" fill="currentColor" />
+                </svg>
+                确认开始充电
+            </button>
+            <button class="btn btn-warn" id="btnToRecharge" hidden>积分不足，去充值</button>
+        </div>
+    </div>
+
+    <!-- 弹窗：充值 -->
+    <div class="mask" id="maskRecharge">
+        <div class="sheet">
+            <div class="sheet-head">
+                <h2>积分充值</h2>
+                <button class="close-x" data-close="maskRecharge">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                        <path d="M5 5l14 14M19 5L5 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="rate-banner">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="9" stroke="#22d3ee" stroke-width="1.6" />
+                    <path d="M12 8v8M8.5 10.5h7M8.5 13.5h7" stroke="#22d3ee" stroke-width="1.5"
+                        stroke-linecap="round" />
+                </svg>
+                <span>兑换比例：<b>1 元 = 60 积分</b>（1 积分 = 1 分钟充电）</span>
+            </div>
+
+            <div class="recharge-grid" id="amtGrid">
+                <div class="amt-item active" data-yuan="1">
+                    <div class="money">¥1</div>
+                    <div class="pts">60 积分</div>
+                </div>
+                <div class="amt-item" data-yuan="5">
+                    <div class="money">¥5</div>
+                    <div class="pts">300 积分</div>
+                </div>
+                <div class="amt-item" data-yuan="10">
+                    <div class="money">¥10</div>
+                    <div class="pts">600 积分</div>
+                </div>
+            </div>
+            <div class="custom-row">
+                <input type="number" id="customYuan" inputmode="decimal" min="1" max="500" placeholder="自定义金额">
+                <span class="unit">元</span>
+            </div>
+
+            <div class="recharge-summary">预计到账 <b id="gainPoints">60</b> 积分</div>
+
+            <button class="btn btn-warn" id="btnPay">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <rect x="3" y="6" width="18" height="13" rx="2.5" stroke="currentColor" stroke-width="1.8" />
+                    <path d="M3 10h18" stroke="currentColor" stroke-width="1.8" />
+                    <path d="M7 15h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                </svg>
+                立即支付
+            </button>
+            <div class="agreement">演示环境 · 点击支付即模拟到账，不产生真实扣款</div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            'use strict';
+
+            /* ================= 存储与状态 ================= */
+            var LS = {
+                points: 'charge_points',
+                state: 'charge_state',        // idle | busy | charging | fault
+                end: 'charge_end_ts',       // 充电结束时间戳
+                total: 'charge_total_min',    // 本次预计总时长(分钟)
+                deducted: 'charge_deducted'    // 本次预扣积分
+            };
+
+            function load(k, def) {
+                var v = localStorage.getItem(k);
+                return v === null ? def : v;
+            }
+            function save(k, v) { localStorage.setItem(k, v); }
+
+            var points = parseInt(load(LS.points, '30'), 10); // 初始 30 积分，便于演示"积分不足"
+            var state = load(LS.state, 'idle');
+            var endTime = parseInt(load(LS.end, '0'), 10);
+            var totalMin = parseInt(load(LS.total, '0'), 10);
+            var deducted = parseInt(load(LS.deducted, '0'), 10);
+
+            /* ================= 工具 ================= */
+            var $ = function (id) { return document.getElementById(id); };
+            var RING_LEN = 628.3;
+
+            var toastTimer = null;
+            function toast(msg, type) {
+                var t = $('toast');
+                t.textContent = msg;
+                t.className = 'toast show ' + (type || '');
+                clearTimeout(toastTimer);
+                toastTimer = setTimeout(function () { t.className = 'toast'; }, 2400);
+            }
+
+            function fmt(sec) {
+                var m = Math.floor(sec / 60), s = sec % 60;
+                return (m < 10 ? '0' + m : m) + ':' + (s < 10 ? '0' + s : s);
+            }
+
+            /* ================= 状态渲染 ================= */
+            function render() {
+                $('pointsNum').textContent = points;
+                var card = $('stationCard');
+                card.dataset.state = state;
+
+                $('badgeIdle').hidden = state !== 'idle';
+                $('badgeBusy').hidden = state !== 'busy';
+                $('badgeCharging').hidden = state !== 'charging';
+                $('badgeFault').hidden = state !== 'fault';
+
+                $('btnUse').hidden = state !== 'idle';
+                $('btnStop').hidden = state !== 'charging';
+                $('btnReport').hidden = state !== 'fault';
+                $('btnSimOccupy').style.display = (state === 'charging' || state === 'fault') ? 'none' : '';
+
+                var tagText = '', name = '', desc = '';
+
+                if (state === 'idle') {
+                    tagText = '空闲中'; name = '充电桩空闲';
+                    desc = '设备一切正常，点击下方按钮开始充电';
+                    $('ringBar').style.strokeDashoffset = 0;
+                    $('countdownBox').hidden = true;
+                    $('chargeMetas').hidden = true;
+                } else if (state === 'busy') {
+                    tagText = '已被占用'; name = '充电桩使用中';
+                    desc = '当前有其他用户正在使用，请稍后再试';
+                    $('ringBar').style.strokeDashoffset = RING_LEN;
+                    $('countdownBox').hidden = true;
+                    $('chargeMetas').hidden = true;
+                } else if (state === 'fault') {
+                    tagText = '设备故障'; name = '设备故障';
+                    desc = '设备发生故障，已暂停服务，请报修或稍后再试';
+                    $('ringBar').style.strokeDashoffset = 0;
+                    $('countdownBox').hidden = true;
+                    $('chargeMetas').hidden = true;
+                } else {
+                    tagText = '正在充电'; name = '正在充电';
+                    desc = '充电进行中，可随时结束并退还剩余积分';
+                    $('countdownBox').hidden = false;
+                    $('chargeMetas').hidden = false;
+                }
+                $('statusTagText').textContent = tagText;
+                $('statusName').textContent = name;
+                $('statusDesc').textContent = desc;
+            }
+
+            /* 充电中每秒刷新 */
+            function tick() {
+                if (state !== 'charging') return;
+                var remainMs = endTime - Date.now();
+                if (remainMs <= 0) { finishCharge(true); return; }
+
+                var remainSec = Math.ceil(remainMs / 1000);
+                var remainMin = remainSec / 60;
+                var usedPts = Math.min(deducted, Math.ceil(deducted - remainMin)); // 已消耗积分
+                var progress = 1 - remainMs / (totalMin * 60000);
+
+                $('countdownText').textContent = fmt(remainSec);
+                $('ringBar').style.strokeDashoffset = RING_LEN * (1 - Math.min(1, Math.max(0, progress)));
+                $('metaUsed').textContent = usedPts;
+                $('metaKwh').textContent = (7 * (totalMin - remainMin) / 60).toFixed(1);
+            }
+
+            /* ================= 充电流程 ================= */
+            function startCharge(min) {
+                points -= min;
+                save(LS.points, points);
+                endTime = Date.now() + min * 60000;
+                totalMin = min;
+                deducted = min;
+                state = 'charging';
+                save(LS.state, state); save(LS.end, endTime);
+                save(LS.total, totalMin); save(LS.deducted, deducted);
+                closeSheet('maskDuration');
+                render(); tick();
+                toast('充电已开始，预扣 ' + min + ' 积分', 'ok');
+            }
+
+            function finishCharge(completed) {
+                var remainMin = 0;
+                if (!completed) {
+                    remainMin = Math.max(0, Math.ceil((endTime - Date.now()) / 60000));
+                }
+                var refund = Math.max(0, Math.ceil(remainMin));
+                var used = deducted - refund;
+                points += refund;
+                save(LS.points, points);
+
+                state = 'idle';
+                endTime = 0; totalMin = 0; deducted = 0;
+                save(LS.state, state); save(LS.end, '0'); save(LS.total, '0'); save(LS.deducted, '0');
+
+                render();
+                if (completed) {
+                    toast('充电完成，本次消耗 ' + used + ' 积分', 'ok');
+                } else {
+                    toast('已结束充电：消耗 ' + used + ' 积分，退还 ' + refund + ' 积分', 'warn');
+                }
+            }
+
+            /* ================= 弹窗控制 ================= */
+            function openSheet(id) { $(id).classList.add('show'); }
+            function closeSheet(id) { $(id).classList.remove('show'); }
+
+            document.querySelectorAll('[data-close]').forEach(function (btn) {
+                btn.addEventListener('click', function () { closeSheet(btn.dataset.close); });
+            });
+            document.querySelectorAll('.mask').forEach(function (mask) {
+                mask.addEventListener('click', function (e) { if (e.target === mask) mask.classList.remove('show'); });
+            });
+
+            /* ================= 时长选择 ================= */
+            var selMin = 30;
+
+            function refreshDurationUI() {
+                var need = selMin;
+                $('needPoints').textContent = need;
+                $('havePoints').textContent = '当前 ' + points + ' / ' + need;
+                $('havePoints').className = 'have' + (points < need ? ' short' : '');
+                var enough = points >= need;
+                $('btnConfirmStart').hidden = !enough;
+                $('btnToRecharge').hidden = enough;
+                if (!enough) {
+                    $('btnConfirmStart').hidden = false;
+                    $('btnConfirmStart').textContent = '积分不足，无法开始';
+                    $('btnConfirmStart').disabled = true;
+                } else {
+                    $('btnConfirmStart').textContent = '确认开始充电';
+                    $('btnConfirmStart').disabled = false;
+                }
+            }
+
+            $('durGrid').addEventListener('click', function (e) {
+                var item = e.target.closest('.dur-item');
+                if (!item) return;
+                document.querySelectorAll('#durGrid .dur-item').forEach(function (el) { el.classList.remove('active'); });
+                item.classList.add('active');
+                selMin = parseInt(item.dataset.min, 10);
+                $('customMin').value = '';
+                refreshDurationUI();
+            });
+
+            $('customMin').addEventListener('input', function () {
+                var v = parseInt(this.value, 10);
+                if (!v || v < 1) { return; }
+                v = Math.min(v, 600);
+                selMin = v;
+                document.querySelectorAll('#durGrid .dur-item').forEach(function (el) { el.classList.remove('active'); });
+                refreshDurationUI();
+            });
+
+            /* ================= 充值 ================= */
+            var selYuan = 1;
+
+            function refreshRechargeUI() {
+                $('gainPoints').textContent = Math.round(selYuan * 60);
+            }
+
+            $('amtGrid').addEventListener('click', function (e) {
+                var item = e.target.closest('.amt-item');
+                if (!item) return;
+                document.querySelectorAll('#amtGrid .amt-item').forEach(function (el) { el.classList.remove('active'); });
+                item.classList.add('active');
+                selYuan = parseFloat(item.dataset.yuan);
+                $('customYuan').value = '';
+                refreshRechargeUI();
+            });
+
+            $('customYuan').addEventListener('input', function () {
+                var v = parseFloat(this.value);
+                if (!v || v < 1) return;
+                v = Math.min(v, 500);
+                selYuan = Math.round(v * 10) / 10;
+                document.querySelectorAll('#amtGrid .amt-item').forEach(function (el) { el.classList.remove('active'); });
+                refreshRechargeUI();
+            });
+
+            $('btnPay').addEventListener('click', function () {
+                var gain = Math.round(selYuan * 60);
+                points += gain;
+                save(LS.points, points);
+                render();
+                toast('充值成功，到账 ' + gain + ' 积分', 'ok');
+                closeSheet('maskRecharge');
+                // 若是从"时长"弹窗过来的，重开时长弹窗继续选
+                if (fromDuration) { openSheet('maskDuration'); refreshDurationUI(); }
+            });
+
+            var fromDuration = false;
+
+            /* ================= 事件绑定 ================= */
+            $('btnUse').addEventListener('click', function () {
+                fromDuration = true;
+                refreshDurationUI();
+                openSheet('maskDuration');
+            });
+
+            $('pointsPill').addEventListener('click', function () {
+                fromDuration = false;
+                refreshRechargeUI();
+                openSheet('maskRecharge');
+            });
+
+            $('btnToRecharge').addEventListener('click', function () {
+                fromDuration = true;
+                closeSheet('maskDuration');
+                refreshRechargeUI();
+                openSheet('maskRecharge');
+            });
+
+            $('btnConfirmStart').addEventListener('click', function () {
+                if (points < selMin) return;
+                startCharge(selMin);
+            });
+
+            $('btnStop').addEventListener('click', function () {
+                finishCharge(false);
+            });
+
+            /* 演示：模拟他人占用 / 释放 */
+            $('btnSimOccupy').addEventListener('click', function () {
+                if (state === 'busy') {
+                    state = 'idle'; save(LS.state, state);
+                    toast('模拟：充电桩已释放');
+                } else if (state === 'idle') {
+                    state = 'busy'; save(LS.state, state);
+                    toast('模拟：充电桩被他人占用', 'warn');
+                }
+                render();
+            });
+
+            /* 演示：模拟设备故障 / 修复 */
+            $('btnSimFault').addEventListener('click', function () {
+                if (state === 'fault') {
+                    state = 'idle'; save(LS.state, state);
+                    toast('模拟：故障已修复，设备恢复正常', 'ok');
+                } else if (state === 'charging') {
+                    // 充电中发生故障：中断充电并退还剩余积分
+                    var refund = Math.max(0, Math.ceil((endTime - Date.now()) / 60000));
+                    points += refund; save(LS.points, points);
+                    endTime = 0; totalMin = 0; deducted = 0;
+                    save(LS.end, '0'); save(LS.total, '0'); save(LS.deducted, '0');
+                    state = 'fault'; save(LS.state, state);
+                    toast('设备故障，充电已中断，退还 ' + refund + ' 积分', 'err');
+                } else {
+                    state = 'fault'; save(LS.state, state);
+                    toast('模拟：设备发生故障', 'err');
+                }
+                render();
+            });
+
+            /* 一键报修 */
+            $('btnReport').addEventListener('click', function () {
+                toast('报修已提交，运维人员将尽快处理', 'ok');
+            });
+
+            /* 重置演示数据 */
+            $('btnReset').addEventListener('click', function () {
+                points = 30; state = 'idle'; endTime = 0; totalMin = 0; deducted = 0;
+                save(LS.points, points); save(LS.state, state); save(LS.end, '0');
+                save(LS.total, '0'); save(LS.deducted, '0');
+                render();
+                toast('演示数据已重置（积分 30，状态空闲）', 'ok');
+            });
+
+            /* ================= 启动 ================= */
+            render();
+            tick();
+            setInterval(tick, 1000);
+        })();
+    </script>
+</body>
+
+</html>

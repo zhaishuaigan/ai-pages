@@ -1,0 +1,16 @@
+{
+    "playlist": [
+        { "title": "示例歌曲 1", "artist": "歌手 A", "src": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", "cover": "https://picsum.photos/seed/music1/300/300" },
+        { "title": "示例歌曲 2", "artist": "歌手 B", "src": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", "cover": "https://picsum.photos/seed/music2/300/300" },
+        { "title": "示例歌曲 3", "artist": "歌手 C", "src": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", "cover": "https://picsum.photos/seed/music3/300/300" },
+        { "title": "示例歌曲 4", "artist": "歌手 D", "src": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3", "cover": "https://picsum.photos/seed/music4/300/300" },
+        { "title": "示例歌曲 5", "artist": "歌手 E", "src": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3", "cover": "https://picsum.photos/seed/music5/300/300" },
+        { "title": "示例歌曲 6", "artist": "歌手 F", "src": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3", "cover": "https://picsum.photos/seed/music6/300/300" },
+        { "title": "示例歌曲 7", "artist": "歌手 G", "src": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3", "cover": "https://picsum.photos/seed/music7/300/300" },
+        { "title": "示例歌曲 8", "artist": "歌手 H", "src": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3", "cover": "https://picsum.photos/seed/music8/300/300" },
+        { "title": "示例歌曲 9", "artist": "歌手 A", "src": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3", "cover": "https://picsum.photos/seed/music9/300/300" },
+        { "title": "示例歌曲 10", "artist": "歌手 B", "src": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3", "cover": "https://picsum.photos/seed/music10/300/300" },
+        { "title": "示例歌曲 11", "artist": "歌手 C", "src": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-11.mp3", "cover": "https://picsum.photos/seed/music11/300/300" },
+        { "title": "示例歌曲 12", "artist": "歌手 D", "src": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-12.mp3", "cover": "https://picsum.photos/seed/music12/300/300" }
+    ]
+}

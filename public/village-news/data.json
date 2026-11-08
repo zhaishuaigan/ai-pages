@@ -1,0 +1,104 @@
+{
+    "meta": {
+        "name": "青山村电子报",
+        "publisher": "青山村村民委员会 主办",
+        "weather": "晴转多云 18~26℃",
+        "note": "逢周五出版 · 免费阅读",
+        "startDate": "2025-01-03"
+    },
+    "headline": {
+        "kicker": "头版头条",
+        "title": "高标准农田改造全面完工 全村新增良田三百亩",
+        "image": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20rural%20village%20aerial%20view%20in%20golden%20autumn%2C%20harvest%20rice%20fields%2C%20country%20houses%20with%20tiled%20roofs%2C%20winding%20country%20road%2C%20distant%20mountains%2C%20clear%20sky%2C%20realistic%20photography&image_size=landscape_16_9",
+        "paragraphs": [
+            "历时八个月的高标准农田改造工程于本周通过验收：土地平整、机耕道硬化、灌溉管网铺设全部到位，昔日零散的\"巴掌田\"连成了大片良田，明年春耕大型农机可以直接开进地里。",
+            "村委会介绍，新修的泵站可覆盖周边五个村民小组，旱季灌溉不再发愁。后续将统一流转经营，农户按亩分红，预计每亩年增收四百元以上。"
+        ],
+        "author": "文 / 村委会宣传栏 · 本报记者下乡采写",
+        "views": 1208
+    },
+    "fresh": [
+        { "date": "10-18", "text": "村口大喇叭明日起每晚六点播豫剧，戏曲爱好者别错过。" },
+        { "date": "10-17", "text": "王婶的\"金瓜王\"摘得镇丰收节评比一等奖，重三十八斤。" },
+        { "date": "10-16", "text": "老槐树下的板凳课堂开讲，主题是果树冬季修剪技术。" },
+        { "date": "10-15", "text": "村图书室新到农技、养生书籍二百册，凭身份证免费借阅。" },
+        { "date": "10-14", "text": "秋收节定于10月28日在文化广场开幕，征集自产农产品展销。" }
+    ],
+    "shops": [
+        {
+            "name": "老李百货",
+            "badge": "本周开业",
+            "desc": "日用百货、烟酒副食、农资代购，免费送货上门。",
+            "offer": "全场九折三天 · 地址：村口加油站旁",
+            "image": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=small%20cozy%20Chinese%20village%20grocery%20store%20storefront%2C%20red%20lanterns%2C%20goods%20on%20wooden%20shelves%2C%20grand%20opening%2C%20daylight%2C%20realistic%20photography&image_size=landscape_4_3"
+        },
+        {
+            "name": "青山豆腐坊",
+            "badge": "本周开业",
+            "desc": "每天现磨卤水豆腐、豆浆，限量供应，卖完即止。",
+            "offer": "开业买二送一 · 地址：村东头第一家的左边",
+            "image": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=traditional%20Chinese%20tofu%20workshop%2C%20steaming%20fresh%20tofu%20blocks%2C%20craftsman%20at%20work%2C%20warm%20morning%20light%2C%20rural%20kitchen%2C%20realistic%20photography&image_size=landscape_4_3"
+        },
+        {
+            "name": "全村快递驿站",
+            "badge": "本周开业",
+            "desc": "各家快递统一进村，扫码取件，大件帮忙搬上车。",
+            "offer": "取件免费寄存三天 · 地址：小卖部隔壁",
+            "image": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=parcel%20pickup%20station%20in%20Chinese%20village%2C%20shelves%20with%20express%20packages%2C%20delivery%20vans%20outside%2C%20rural%20street%2C%20realistic%20photography&image_size=landscape_4_3"
+        }
+    ],
+    "jobs": [
+        {
+            "title": "果园采摘工",
+            "count": 10,
+            "pay": "180元/天",
+            "desc": "苹果园早晚各一趟，管午饭，干满一周结现钱。",
+            "contact": "李园主 138****6600"
+        },
+        {
+            "title": "电商打包员",
+            "count": 4,
+            "pay": "2800~3500/月",
+            "desc": "把山货装箱贴单，手脚麻利即可，可就近照顾家里。",
+            "contact": "小陈 139****2210"
+        },
+        {
+            "title": "农家乐厨师",
+            "count": 1,
+            "pay": "4500/月包住",
+            "desc": "会做本地大锅菜优先，周末双休轮班。",
+            "contact": "张老板 137****8811"
+        }
+    ],
+    "jobNote": "招工信息免费刊登，请电话核实后再上岗，谨防收费骗局。",
+    "matches": [
+        {
+            "num": "缘001",
+            "name": "张先生",
+            "age": 28,
+            "desc": "县城中学教师，青山村人，有房有车，性格沉稳，诚意觅 26~32 岁女士。"
+        },
+        {
+            "num": "缘002",
+            "name": "刘女士",
+            "age": 26,
+            "desc": "镇卫生院护士，本村人，孝顺开朗，喜欢做饭和散步，觅 27~33 岁男士。"
+        },
+        {
+            "num": "缘003",
+            "name": "王先生",
+            "age": 31,
+            "desc": "返乡创业经营水果合作社，勤劳踏实，觅 25~33 岁女士，能一起干活更好。"
+        }
+    ],
+    "matchNote": "每周六上午村委会大院有相亲见面会，红娘热线：137****9966（刘红娘）",
+    "letter": {
+        "text": "今年村里装了六十盏太阳能路灯，晚上跳广场舞回来再也不摸黑了。给村委会点个赞！",
+        "from": "五组村民 老周"
+    },
+    "footer": {
+        "slogan": "村风传千里 · 报上说家常",
+        "organizer": "主办：青山村村民委员会 · 协办：青年志愿者服务队 · 欢迎全村乡亲自由投稿",
+        "copyright": "本页为演示页面，文中人物信息均为虚构 · © 2025-2026 青山村电子报"
+    }
+}

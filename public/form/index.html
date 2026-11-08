@@ -1,0 +1,3217 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>可视化表单设计器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --bg: #07090d;
+            --card: #10151d;
+            --card-2: #0c1118;
+            --card-3: #131a24;
+            --border: #1f2836;
+            --border-2: #232e3f;
+            --border-3: #2a3546;
+            --text: #e8edf4;
+            --text-2: #cdd6e4;
+            --dim: #8b95a6;
+            --dim-2: #5b6678;
+            --cyan: #22d3ee;
+            --blue: #3b82f6;
+            --red: #f87171;
+            --green: #34d399;
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+            overflow: hidden;
+            font-size: 14px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #232e3f;
+            border-radius: 8px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #2f3d52;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        /* ============ 整体布局 ============ */
+        .app {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .topbar {
+            height: 58px;
+            flex: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            background: var(--card-2);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            font-size: 15.5px;
+            font-weight: 600;
+            letter-spacing: .3px;
+        }
+
+        .brand-logo {
+            width: 32px;
+            height: 32px;
+            border-radius: 9px;
+            display: grid;
+            place-items: center;
+            color: #04121a;
+            background: linear-gradient(135deg, var(--cyan), var(--blue));
+        }
+
+        .brand-logo svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn {
+            height: 36px;
+            padding: 0 14px;
+            border-radius: 8px;
+            border: 1px solid var(--border-3);
+            background: var(--card-3);
+            color: var(--text-2);
+            font-size: 13.5px;
+            font-family: inherit;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            transition: border-color .15s, color .15s, background .15s, transform .05s;
+            white-space: nowrap;
+        }
+
+        .btn:hover {
+            border-color: #3a4658;
+            color: #fff;
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .btn.primary {
+            border: none;
+            color: #04121a;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--cyan), var(--blue));
+        }
+
+        .btn.primary:hover {
+            color: #04121a;
+            filter: brightness(1.08);
+        }
+
+        .btn.danger:hover {
+            border-color: var(--red);
+            color: var(--red);
+        }
+
+        .btn.ghost {
+            background: transparent;
+            width: 100%;
+            justify-content: center;
+            border-style: dashed;
+            color: var(--dim);
+        }
+
+        .btn.ghost:hover {
+            color: var(--cyan);
+            border-color: var(--cyan);
+        }
+
+        .main {
+            flex: 1;
+            display: flex;
+            min-height: 0;
+        }
+
+        /* ============ 左侧设计区 ============ */
+        .canvas-area {
+            flex: 1;
+            min-width: 0;
+            overflow-y: auto;
+            padding: 26px 24px 60px;
+            background-color: var(--bg);
+            background-image: radial-gradient(circle, rgba(42, 53, 70, .55) 1px, transparent 1px);
+            background-size: 22px 22px;
+        }
+
+        .sheet {
+            max-width: 760px;
+            margin: 0 auto;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .35);
+        }
+
+        .sheet-title {
+            padding: 24px 32px 0;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .canvas-list {
+            position: relative;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding: 20px 24px 28px;
+        }
+
+        .empty-hint {
+            flex: 0 0 100%;
+            align-self: stretch;
+            min-height: 360px;
+            border: 1.5px dashed var(--border-3);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--dim-2);
+            transition: border-color .15s, color .15s, background .15s;
+        }
+
+        .empty-hint svg {
+            width: 42px;
+            height: 42px;
+            margin-bottom: 14px;
+        }
+
+        .empty-hint .t1 {
+            font-size: 15px;
+            color: var(--dim);
+            margin-bottom: 6px;
+        }
+
+        .empty-hint .t2 {
+            font-size: 12.5px;
+        }
+
+        .canvas-list.drag-over .empty-hint {
+            border-color: var(--cyan);
+            color: var(--cyan);
+            background: rgba(34, 211, 238, .04);
+        }
+
+        /* 设计区字段外壳 */
+        .cf {
+            position: relative;
+            flex: 0 0 100%;
+            min-width: 0;
+        }
+
+        .cf.half {
+            flex-basis: calc(50% - 6px);
+        }
+
+        .cf.auto {
+            flex: 0 0 auto;
+            max-width: 100%;
+        }
+
+        .cf-inner {
+            border: 1px solid transparent;
+            border-radius: 10px;
+            padding: 14px 14px 16px;
+            transition: border-color .15s, background .15s;
+        }
+
+        .cf:hover .cf-inner {
+            border-color: var(--border-3);
+            background: rgba(255, 255, 255, .02);
+        }
+
+        .cf.selected .cf-inner {
+            border-color: var(--cyan);
+            background: rgba(34, 211, 238, .05);
+        }
+
+        .cf.dragging {
+            opacity: .35;
+        }
+
+        .cf-body {
+            pointer-events: none;
+        }
+
+        .cf .f-label {
+            padding-right: 64px;
+        }
+
+        .cf-tools {
+            position: absolute;
+            top: 6px;
+            right: 8px;
+            display: none;
+            gap: 5px;
+            z-index: 6;
+        }
+
+        .cf:hover .cf-tools,
+        .cf.selected .cf-tools {
+            display: flex;
+        }
+
+        .tbtn {
+            width: 26px;
+            height: 26px;
+            border-radius: 6px;
+            border: 1px solid var(--border-3);
+            background: #131a24;
+            color: var(--dim);
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            transition: color .15s, border-color .15s;
+        }
+
+        .tbtn svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .tbtn:hover {
+            color: var(--cyan);
+            border-color: var(--cyan);
+        }
+
+        .tbtn.del:hover {
+            color: var(--red);
+            border-color: var(--red);
+        }
+
+        /* 拖拽插入指示线 */
+        .drop-line {
+            flex: 0 0 100%;
+            height: 0;
+            border-top: 2px solid var(--cyan);
+            border-radius: 2px;
+            position: relative;
+            margin: 1px 0;
+        }
+
+        .drop-line::before {
+            content: '';
+            position: absolute;
+            left: -3px;
+            top: -5px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--cyan);
+        }
+
+        /* ============ 右侧组件面板 ============ */
+        .sidebar {
+            width: 296px;
+            flex: none;
+            border-left: 1px solid var(--border);
+            background: var(--card-2);
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .side-tip {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--dim);
+            background: var(--card-3);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 9px 12px;
+            margin-bottom: 14px;
+            line-height: 1.5;
+        }
+
+        .side-tip svg {
+            width: 15px;
+            height: 15px;
+            flex: none;
+            color: var(--cyan);
+        }
+
+        .group-title {
+            font-size: 12px;
+            color: var(--dim-2);
+            letter-spacing: 1.5px;
+            margin: 16px 4px 10px;
+        }
+
+        .pal-group:first-child .group-title {
+            margin-top: 2px;
+        }
+
+        .pal-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 11px;
+            margin-bottom: 8px;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            background: var(--card-3);
+            cursor: grab;
+            user-select: none;
+            transition: border-color .15s, transform .12s, background .15s;
+        }
+
+        .pal-item:hover {
+            border-color: rgba(34, 211, 238, .55);
+            background: rgba(34, 211, 238, .05);
+            transform: translateY(-1px);
+        }
+
+        .pal-item:active {
+            cursor: grabbing;
+        }
+
+        .pal-item.pal-dragging {
+            opacity: .45;
+        }
+
+        .pal-icon {
+            width: 32px;
+            height: 32px;
+            flex: none;
+            display: grid;
+            place-items: center;
+            border-radius: 8px;
+            color: var(--cyan);
+            background: rgba(34, 211, 238, .1);
+        }
+
+        .pal-icon svg {
+            width: 17px;
+            height: 17px;
+        }
+
+        .pal-label {
+            font-size: 13.5px;
+            color: var(--text-2);
+        }
+
+        .pal-add {
+            margin-left: auto;
+            width: 22px;
+            height: 22px;
+            flex: none;
+            display: grid;
+            place-items: center;
+            border-radius: 6px;
+            color: var(--dim-2);
+            transition: color .15s, background .15s;
+        }
+
+        .pal-add svg {
+            width: 15px;
+            height: 15px;
+        }
+
+        .pal-item:hover .pal-add {
+            color: var(--cyan);
+            background: rgba(34, 211, 238, .12);
+        }
+
+        /* ============ 弹窗 ============ */
+        .modal-mask {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: rgba(3, 6, 10, .68);
+            backdrop-filter: blur(3px);
+        }
+
+        .modal-mask.show {
+            display: flex;
+        }
+
+        .modal {
+            width: 600px;
+            max-width: 100%;
+            max-height: 86vh;
+            display: flex;
+            flex-direction: column;
+            background: var(--card);
+            border: 1px solid var(--border-2);
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 24px 70px rgba(0, 0, 0, .5);
+        }
+
+        .m-head {
+            flex: none;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .m-close {
+            width: 28px;
+            height: 28px;
+            border: none;
+            border-radius: 7px;
+            background: transparent;
+            color: var(--dim);
+            cursor: pointer;
+            display: grid;
+            place-items: center;
+        }
+
+        .m-close:hover {
+            background: var(--card-3);
+            color: var(--text);
+        }
+
+        .m-close svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .m-body {
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .m-foot {
+            flex: none;
+            padding: 14px 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* 设置表单 */
+        .set-row {
+            margin-bottom: 16px;
+        }
+
+        .set-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .sl {
+            display: block;
+            font-size: 13px;
+            color: var(--dim);
+            margin-bottom: 7px;
+        }
+
+        .si {
+            width: 100%;
+            height: 38px;
+            padding: 0 12px;
+            background: var(--card-2);
+            border: 1px solid var(--border-2);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 13.5px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color .15s, box-shadow .15s;
+        }
+
+        .si:focus {
+            border-color: var(--cyan);
+            box-shadow: 0 0 0 3px rgba(34, 211, 238, .1);
+        }
+
+        .si::placeholder {
+            color: var(--dim-2);
+        }
+
+        textarea.si {
+            height: auto;
+            min-height: 84px;
+            padding: 10px 12px;
+            line-height: 1.6;
+            resize: vertical;
+        }
+
+        select.si {
+            appearance: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+            padding-right: 32px;
+            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238b95a6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+        }
+
+        select.si option {
+            background: var(--card);
+            color: var(--text);
+        }
+
+        .mswitch {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            user-select: none;
+            min-height: 30px;
+        }
+
+        .mswitch input {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .mswitch-track {
+            position: relative;
+            width: 38px;
+            height: 21px;
+            flex: none;
+            border-radius: 11px;
+            background: var(--border-3);
+            transition: background .2s;
+        }
+
+        .mswitch-track::after {
+            content: '';
+            position: absolute;
+            top: 2.5px;
+            left: 2.5px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #e8edf4;
+            transition: transform .2s;
+        }
+
+        .mswitch input:checked+.mswitch-track {
+            background: var(--cyan);
+        }
+
+        .mswitch input:checked+.mswitch-track::after {
+            transform: translateX(17px);
+        }
+
+        .mswitch-label {
+            font-size: 13.5px;
+            color: var(--text-2);
+        }
+
+        .opt-box {
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            padding: 10px;
+            background: rgba(255, 255, 255, .015);
+        }
+
+        .opt-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .opt-row:last-of-type {
+            margin-bottom: 10px;
+        }
+
+        .opt-row .si {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .opt-del {
+            width: 38px;
+            flex: none;
+            height: 38px;
+            border: 1px solid var(--border-2);
+            border-radius: 8px;
+            background: var(--card-2);
+            color: var(--dim);
+            cursor: pointer;
+            display: grid;
+            place-items: center;
+        }
+
+        .opt-del:hover {
+            color: var(--red);
+            border-color: var(--red);
+        }
+
+        .opt-del svg {
+            width: 15px;
+            height: 15px;
+        }
+
+        .set-hint {
+            margin-top: 6px;
+            font-size: 12px;
+            color: var(--dim-2);
+            line-height: 1.6;
+        }
+
+        /* 数据源复合控件 */
+        .ds-box {
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            padding: 10px;
+            background: rgba(255, 255, 255, .015);
+        }
+
+        .ds-tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+
+        .ds-tab {
+            flex: 1;
+            height: 32px;
+            border: 1px solid var(--border-2);
+            border-radius: 7px;
+            background: var(--card-2);
+            color: var(--dim);
+            font-size: 13px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: border-color .15s, color .15s;
+        }
+
+        .ds-tab:hover {
+            color: var(--text);
+            border-color: var(--border-3);
+        }
+
+        .ds-tab.is-active {
+            color: #04121a;
+            font-weight: 600;
+            border-color: transparent;
+            background: linear-gradient(135deg, var(--cyan), var(--blue));
+        }
+
+        .ds-panel[hidden] {
+            display: none;
+        }
+
+        .ds-field {
+            margin-bottom: 10px;
+        }
+
+        .ds-field:last-child {
+            margin-bottom: 0;
+        }
+
+        .ds-field .si {
+            margin-top: 0;
+        }
+
+        .api-test-result {
+            margin-top: 8px;
+            font-size: 12px;
+            line-height: 1.6;
+            color: var(--dim);
+            word-break: break-all;
+        }
+
+        .api-test-result.ok {
+            color: var(--green);
+        }
+
+        .api-test-result.err {
+            color: var(--red);
+        }
+
+        /* 预览弹窗 */
+        #previewMask .modal {
+            width: 500px;
+        }
+
+        #previewBody {
+            background: var(--bg);
+        }
+
+        .pv-title {
+            font-size: 19px;
+            font-weight: 600;
+            margin-bottom: 22px;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            left: 50%;
+            bottom: 42px;
+            transform: translateX(-50%) translateY(16px);
+            background: #161d28;
+            border: 1px solid var(--border-3);
+            color: var(--text);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 13.5px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .25s, transform .25s;
+            z-index: 300;
+            box-shadow: 0 10px 34px rgba(0, 0, 0, .45);
+            max-width: 80vw;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+    </style>
+
+    <!-- 表单字段共享样式：设计区 / 预览 / 导出 HTML 三处共用同一份样式，保证所见即所得 -->
+    <style id="sharedFormStyle">
+        .fx {
+            color: #e8edf4;
+            font-size: 14px;
+        }
+
+        .fx .form-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .fx .f-row {
+            flex: 0 0 100%;
+            min-width: 0;
+        }
+
+        .fx .f-row.half {
+            flex-basis: calc(50% - 8px);
+        }
+
+        .fx .f-row.auto {
+            flex: 0 0 auto;
+            max-width: 100%;
+        }
+
+        .fx .f-label {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #cdd6e4;
+            margin: 0 0 8px;
+            line-height: 1.4;
+        }
+
+        .fx .req {
+            color: #f87171;
+        }
+
+        .fx .inp {
+            width: 100%;
+            height: 40px;
+            padding: 0 13px;
+            background: #0c1118;
+            border: 1px solid #232e3f;
+            border-radius: 9px;
+            color: #e8edf4;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color .15s, box-shadow .15s;
+        }
+
+        .fx .inp::placeholder {
+            color: #5b6678;
+        }
+
+        .fx .inp:focus {
+            border-color: #22d3ee;
+            box-shadow: 0 0 0 3px rgba(34, 211, 238, .12);
+        }
+
+        .fx textarea.inp {
+            height: auto;
+            min-height: 80px;
+            padding: 10px 13px;
+            line-height: 1.6;
+            resize: vertical;
+        }
+
+        .fx select.inp {
+            appearance: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+            padding-right: 34px;
+            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238b95a6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+        }
+
+        .fx select.inp option {
+            background: #10151d;
+            color: #e8edf4;
+        }
+
+        .fx .f-opts {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .fx .f-opts.inline {
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 8px 18px;
+        }
+
+        .fx .f-opts label.opt {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            color: #cdd6e4;
+            font-size: 14px;
+            min-height: 22px;
+            margin: 0;
+        }
+
+        .fx .f-opts input[type=radio],
+        .fx .f-opts input[type=checkbox] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 17px;
+            height: 17px;
+            margin: 0;
+            border: 2px solid #3a4658;
+            background: transparent;
+            position: relative;
+            cursor: pointer;
+            flex: none;
+            transition: border-color .15s, background-color .15s;
+        }
+
+        .fx .f-opts input[type=radio] {
+            border-radius: 50%;
+        }
+
+        .fx .f-opts input[type=checkbox] {
+            border-radius: 5px;
+        }
+
+        .fx .f-opts input[type=radio]:checked {
+            border-color: #22d3ee;
+            background: #22d3ee;
+            box-shadow: inset 0 0 0 3.5px #0c1118;
+        }
+
+        .fx .f-opts input[type=checkbox]:checked {
+            border-color: #22d3ee;
+            background: #22d3ee url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2304121a' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7'/%3E%3C/svg%3E") center / 11px no-repeat;
+        }
+
+        .fx .f-opts.is-invalid input[type=radio],
+        .fx .f-opts.is-invalid input[type=checkbox] {
+            border-color: #f87171;
+        }
+
+        .fx .f-switch {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            min-height: 24px;
+        }
+
+        .fx .f-switch input {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .fx .f-switch .sw {
+            position: relative;
+            width: 42px;
+            height: 24px;
+            flex: none;
+            border-radius: 12px;
+            background: #2a3546;
+            transition: background .2s;
+        }
+
+        .fx .f-switch .sw::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #fff;
+            transition: transform .2s;
+        }
+
+        .fx .f-switch input:checked+.sw {
+            background: #22d3ee;
+        }
+
+        .fx .f-switch input:checked+.sw::after {
+            transform: translateX(18px);
+        }
+
+        .fx .f-upload {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .fx input.upload-real {
+            display: none;
+        }
+
+        .fx .upload-btn {
+            height: 40px;
+            padding: 0 18px;
+            border: 1px dashed #3a4658;
+            border-radius: 9px;
+            background: #0c1118;
+            color: #9fb0c8;
+            font-size: 14px;
+            font-family: inherit;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: border-color .15s, color .15s;
+        }
+
+        .fx .upload-btn:hover {
+            border-color: #22d3ee;
+            color: #22d3ee;
+        }
+
+        .fx .upload-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .fx .upload-status {
+            font-size: 12.5px;
+            color: #8b95a6;
+            word-break: break-all;
+        }
+
+        .fx .upload-status.ok {
+            color: #34d399;
+        }
+
+        .fx .upload-status.err {
+            color: #f87171;
+        }
+
+        .fx .f-upload.is-invalid .upload-btn {
+            border-color: #f87171;
+        }
+
+        .fx .f-paragraph {
+            font-size: 13.5px;
+            line-height: 1.8;
+            color: #8b95a6;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .fx .f-divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #8b95a6;
+            font-size: 13px;
+        }
+
+        .fx .f-divider::before,
+        .fx .f-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #232e3f;
+        }
+
+        .fx .f-divider.left::before {
+            flex: 0 0 28px;
+        }
+
+        .fx .f-divider.right::after {
+            flex: 0 0 28px;
+        }
+
+        .fx hr.f-hr {
+            border: none;
+            border-top: 1px solid #232e3f;
+            margin: 4px 0;
+        }
+
+        .fx .submit-btn {
+            width: 100%;
+            height: 46px;
+            margin-top: 20px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #22d3ee, #3b82f6);
+            color: #04121a;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        .fx .submit-btn:active {
+            transform: translateY(1px);
+        }
+
+        .fx .form-msg {
+            min-height: 22px;
+            margin-top: 12px;
+            font-size: 13px;
+            color: #8b95a6;
+            word-break: break-all;
+        }
+
+        .fx .form-msg.ok {
+            color: #34d399;
+        }
+
+        .fx .form-msg.err {
+            color: #f87171;
+        }
+
+        /* ============ 评分 ============ */
+        .fx .f-rating {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .fx .f-rating .stars {
+            display: flex;
+            gap: 4px;
+        }
+
+        .fx .f-rating .star {
+            font-size: 28px;
+            line-height: 1;
+            color: #3a4658;
+            cursor: pointer;
+            transition: color .12s, transform .12s;
+            user-select: none;
+        }
+
+        .fx .f-rating .star:hover {
+            transform: scale(1.15);
+        }
+
+        .fx .f-rating .star.active {
+            color: #fbbf24;
+        }
+
+        .fx .f-rating .star.hover-active {
+            color: #fcd34d;
+        }
+
+        .fx .f-rating .rating-text {
+            font-size: 13px;
+            color: #8b95a6;
+        }
+
+        .fx .f-rating.is-invalid .star {
+            color: #5a3030;
+        }
+
+        /* ============ 级联选择 ============ */
+        .fx .f-cascade {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .fx .f-cascade .cascade-sel {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        /* ============ 富文本 ============ */
+        .fx .f-richtext .rt-toolbar {
+            display: flex;
+            gap: 4px;
+            padding: 6px;
+            border: 1px solid #232e3f;
+            border-bottom: none;
+            border-radius: 9px 9px 0 0;
+            background: #0c1118;
+        }
+
+        .fx .f-richtext .rt-btn {
+            min-width: 30px;
+            height: 28px;
+            padding: 0 8px;
+            border: 1px solid #232e3f;
+            border-radius: 6px;
+            background: #131a24;
+            color: #cdd6e4;
+            font-size: 13px;
+            font-family: inherit;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: border-color .15s, color .15s;
+        }
+
+        .fx .f-richtext .rt-btn:hover {
+            border-color: #22d3ee;
+            color: #22d3ee;
+        }
+
+        .fx .f-richtext .rt-editor {
+            min-height: 100px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 10px 13px;
+            border: 1px solid #232e3f;
+            border-radius: 0 0 9px 9px;
+            background: #0c1118;
+            color: #e8edf4;
+            font-size: 14px;
+            line-height: 1.6;
+            outline: none;
+        }
+
+        .fx .f-richtext .rt-editor:focus {
+            border-color: #22d3ee;
+        }
+
+        .fx .f-richtext .rt-editor:empty::before {
+            content: attr(data-placeholder);
+            color: #5b6678;
+            pointer-events: none;
+        }
+
+        .fx .f-richtext .rt-editor ul,
+        .fx .f-richtext .rt-editor ol {
+            padding-left: 22px;
+            margin: 4px 0;
+        }
+
+        .fx .f-richtext .rt-editor a {
+            color: #22d3ee;
+        }
+
+        .fx .f-richtext.is-invalid .rt-editor {
+            border-color: #f87171;
+        }
+
+        /* ============ 接口数据加载态 / 数据来源徽标 ============ */
+        .fx .api-loading,
+        .fx .api-error {
+            display: block;
+            font-size: 13px;
+            padding: 3px 0;
+        }
+
+        .fx .api-loading {
+            color: #8b95a6;
+        }
+
+        .fx .api-error {
+            color: #f87171;
+        }
+
+        .fx .ds-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 8px;
+            max-width: 100%;
+            padding: 3px 10px;
+            border-radius: 20px;
+            border: 1px solid rgba(34, 211, 238, .3);
+            background: rgba(34, 211, 238, .08);
+            font-size: 11.5px;
+            line-height: 1.5;
+            color: #22d3ee;
+        }
+
+        .fx .ds-badge .ds-tag {
+            flex: none;
+            font-weight: 600;
+        }
+
+        .fx .ds-badge .ds-badge-url {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: #8b95a6;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+        <!-- 顶部工具栏 -->
+        <header class="topbar">
+            <div class="brand">
+                <span class="brand-logo" id="brandSvg"></span>
+                <span>可视化表单设计器</span>
+            </div>
+            <div class="top-actions">
+                <button class="btn" id="btnFormSettings" type="button">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M4 6h10M18 6h2M4 12h2M10 12h10M4 18h12M20 18h0" />
+                        <circle cx="16" cy="6" r="2" />
+                        <circle cx="8" cy="12" r="2" />
+                        <circle cx="18" cy="18" r="2" />
+                    </svg>
+                    表单设置
+                </button>
+                <button class="btn" id="btnPreview" type="button">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" />
+                        <circle cx="12" cy="12" r="3" />
+                    </svg>
+                    预览
+                </button>
+                <button class="btn danger" id="btnClear" type="button">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path
+                            d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13M10 11v6M14 11v6" />
+                    </svg>
+                    清空
+                </button>
+                <button class="btn primary" id="btnExport" type="button">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M12 4v11M7 10l5 5 5-5" />
+                        <path d="M5 20h14" />
+                    </svg>
+                    导出 HTML
+                </button>
+            </div>
+        </header>
+
+        <div class="main">
+            <!-- 左：设计区 -->
+            <section class="canvas-area">
+                <div class="sheet">
+                    <div class="sheet-title" id="sheetTitle">未命名表单</div>
+                    <div class="canvas-list" id="canvasList"></div>
+                </div>
+            </section>
+
+            <!-- 右：组件面板 -->
+            <aside class="sidebar">
+                <div class="side-tip">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="M12 11v5M12 7.6v.1" />
+                    </svg>
+                    点击组件可添加，也可拖拽到左侧设计区
+                </div>
+                <div id="palette"></div>
+            </aside>
+        </div>
+    </div>
+
+    <!-- 字段属性设置弹窗 -->
+    <div class="modal-mask" id="settingsMask">
+        <div class="modal">
+            <div class="m-head">
+                <span id="settingsTitle">字段属性</span>
+                <button class="m-close" type="button" data-close>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="m-body" id="settingsBody"></div>
+            <div class="m-foot">
+                <button class="btn" type="button" data-close>取消</button>
+                <button class="btn primary" type="button" id="btnSaveSettings">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 表单设置弹窗 -->
+    <div class="modal-mask" id="formMask">
+        <div class="modal">
+            <div class="m-head">
+                <span>表单设置</span>
+                <button class="m-close" type="button" data-close>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="m-body">
+                <div class="set-row">
+                    <label class="sl" for="fTitle">表单标题</label>
+                    <input class="si" id="fTitle" type="text" placeholder="请输入表单标题">
+                </div>
+                <div class="set-row">
+                    <label class="sl" for="fAction">表单提交地址（action）</label>
+                    <input class="si" id="fAction" type="text" placeholder="例如：https://example.com/api/form，留空则仅前端演示">
+                    <div class="set-hint">导出后点击提交按钮会以 POST + FormData 方式提交到此地址。</div>
+                </div>
+                <div class="set-row">
+                    <label class="sl" for="fSubmit">提交按钮文字</label>
+                    <input class="si" id="fSubmit" type="text" placeholder="提交">
+                </div>
+            </div>
+            <div class="m-foot">
+                <button class="btn" type="button" data-close>取消</button>
+                <button class="btn primary" type="button" id="btnSaveForm">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 预览弹窗 -->
+    <div class="modal-mask" id="previewMask">
+        <div class="modal">
+            <div class="m-head">
+                <span>表单预览</span>
+                <button class="m-close" type="button" data-close>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="m-body" id="previewBody"></div>
+        </div>
+    </div>
+
+    <!-- 确认弹窗 -->
+    <div class="modal-mask" id="confirmMask">
+        <div class="modal" style="width:400px">
+            <div class="m-head">
+                <span id="confirmTitle">提示</span>
+                <button class="m-close" type="button" data-close>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="m-body">
+                <p id="confirmText" style="color:#9fb0c8;font-size:14px;line-height:1.8"></p>
+            </div>
+            <div class="m-foot">
+                <button class="btn" type="button" id="confirmCancel">取消</button>
+                <button class="btn primary" type="button" id="confirmOk"
+                    style="background:linear-gradient(135deg,#f87171,#ef4444)">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        (function () {
+            'use strict';
+
+            /* ================= 工具函数 ================= */
+            function uid() {
+                return Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-3);
+            }
+
+            function esc(s) {
+                return String(s == null ? '' : s)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;');
+            }
+
+            function nl2br(s) {
+                return s.replace(/\r?\n/g, '<br>');
+            }
+
+            function attr(name, val) {
+                if (val === '' || val === null || val === undefined) return '';
+                return ' ' + name + '="' + esc(val) + '"';
+            }
+
+            function $(id) {
+                return document.getElementById(id);
+            }
+
+            /* ================= SVG 图标 ================= */
+            function svgIcon(path) {
+                return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + path + '</svg>';
+            }
+
+            var ICON_PATHS = {
+                text: '<path d="M4 7V5h16v2"/><path d="M12 5v14"/><path d="M8 19h8"/>',
+                textarea: '<path d="M4 6h16M4 11h16M4 16h10"/>',
+                number: '<path d="M10 4L8 20M16 4l-2 16M4 9h17M3 15h17"/>',
+                lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+                mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+                phone: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/>',
+                list: '<path d="M8 6h13M8 12h13M8 18h13M3.6 6h.01M3.6 12h.01M3.6 18h.01"/>',
+                radio: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.4" fill="currentColor" stroke="none"/>',
+                check: '<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 12l2.5 2.5 4.5-5"/>',
+                switch: '<rect x="2" y="7" width="20" height="10" rx="5"/><circle cx="16" cy="12" r="3.2" fill="currentColor" stroke="none"/>',
+                calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+                calendarClock: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><circle cx="12" cy="15" r="3.2"/><path d="M12 13.4V15l1.3.8"/>',
+                upload: '<path d="M12 16V4M7 9l5-5 5 5"/><path d="M5 16v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2"/>',
+                paragraph: '<path d="M4 4v16M9 5h11M9 10h11M9 15h7"/>',
+                divider: '<path d="M3 12h7M14 12h7"/><circle cx="12" cy="12" r="2"/>',
+                gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
+                trash: '<path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13M10 11v6M14 11v6"/>',
+                eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>',
+                download: '<path d="M12 4v11M7 10l5 5 5-5"/><path d="M5 20h14"/>',
+                plus: '<path d="M12 5v14M5 12h14"/>',
+                close: '<path d="M18 6L6 18M6 6l12 12"/>',
+                pencil: '<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+                inbox: '<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5.5L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.5A2 2 0 0 0 16.7 4H7.3a2 2 0 0 0-1.8 1.5z"/>',
+                info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.6v.1"/>',
+                star: '<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/>',
+                cascade: '<path d="M3 5h6M3 12h4M3 19h2"/><path d="M9 5l3 3-3 3M9 12l3 3-3 3"/><path d="M12 5h6M15 12h4M14 19h5"/>',
+                richText: '<path d="M4 6h16M4 12h16M4 18h10"/><path d="M14 15l2 2 4-4"/>'
+            };
+
+            function icon(name) {
+                return svgIcon(ICON_PATHS[name] || '');
+            }
+
+            /* ================= 组件目录 ================= */
+            var GROUPS = [
+                {
+                    title: '基础字段',
+                    items: [
+                        { type: 'text', label: '单行文本', icon: 'text' },
+                        { type: 'textarea', label: '多行文本', icon: 'textarea' },
+                        { type: 'number', label: '数字', icon: 'number' },
+                        { type: 'password', label: '密码', icon: 'lock' },
+                        { type: 'email', label: '邮箱', icon: 'mail' },
+                        { type: 'tel', label: '电话', icon: 'phone' }
+                    ]
+                },
+                {
+                    title: '选择字段',
+                    items: [
+                        { type: 'select', label: '下拉选择', icon: 'list' },
+                        { type: 'radio', label: '单选框组', icon: 'radio' },
+                        { type: 'checkbox', label: '多选框组', icon: 'check' },
+                        { type: 'switch', label: '开关', icon: 'switch' }
+                    ]
+                },
+                {
+                    title: '日期时间',
+                    items: [
+                        { type: 'date', label: '日期', icon: 'calendar' },
+                        { type: 'datetime', label: '日期时间', icon: 'calendarClock' }
+                    ]
+                },
+                {
+                    title: '高级字段',
+                    items: [
+                        { type: 'upload', label: '文件上传', icon: 'upload' },
+                        { type: 'rating', label: '评分', icon: 'star' },
+                        { type: 'cascade', label: '级联选择', icon: 'cascade' },
+                        { type: 'richtext', label: '富文本', icon: 'richText' },
+                        { type: 'paragraph', label: '段落说明', icon: 'paragraph' },
+                        { type: 'divider', label: '分割线', icon: 'divider' }
+                    ]
+                }
+            ];
+
+            var TYPE_LABELS = {};
+            GROUPS.forEach(function (g) {
+                g.items.forEach(function (it) {
+                    TYPE_LABELS[it.type] = it.label;
+                });
+            });
+
+            function defaultOptions() {
+                return [
+                    { label: '选项一', value: '1' },
+                    { label: '选项二', value: '2' },
+                    { label: '选项三', value: '3' }
+                ];
+            }
+
+            var DEFAULTS = {
+                text: function () {
+                    return { label: '单行文本', name: 'text_' + uid(), placeholder: '请输入', defaultValue: '', maxlength: '', required: false, width: '100%' };
+                },
+                textarea: function () {
+                    return { label: '多行文本', name: 'textarea_' + uid(), placeholder: '请输入', defaultValue: '', rows: '3', maxlength: '', required: false, width: '100%' };
+                },
+                number: function () {
+                    return { label: '数字', name: 'number_' + uid(), placeholder: '请输入数字', defaultValue: '', min: '', max: '', step: '', required: false, width: '100%' };
+                },
+                password: function () {
+                    return { label: '密码', name: 'password_' + uid(), placeholder: '请输入密码', required: false, width: '100%' };
+                },
+                email: function () {
+                    return { label: '邮箱', name: 'email_' + uid(), placeholder: '请输入邮箱', defaultValue: '', maxlength: '', required: false, width: '100%' };
+                },
+                tel: function () {
+                    return { label: '电话', name: 'tel_' + uid(), placeholder: '请输入手机号', defaultValue: '', maxlength: '', required: false, width: '100%' };
+                },
+                select: function () {
+                    return { label: '下拉选择', name: 'select_' + uid(), options: defaultOptions(), placeholder: '请选择', defaultValue: '', required: false, width: '100%', dataSource: 'static', apiUrl: '', apiMethod: 'GET', apiPath: '', labelField: '', valueField: '' };
+                },
+                radio: function () {
+                    return { label: '单选框组', name: 'radio_' + uid(), options: defaultOptions(), defaultValue: '', inline: false, required: false, width: '100%', dataSource: 'static', apiUrl: '', apiMethod: 'GET', apiPath: '', labelField: '', valueField: '' };
+                },
+                checkbox: function () {
+                    return { label: '多选框组', name: 'checkbox_' + uid(), options: defaultOptions(), defaultValue: '', inline: false, required: false, width: '100%', dataSource: 'static', apiUrl: '', apiMethod: 'GET', apiPath: '', labelField: '', valueField: '' };
+                },
+                switch: function () {
+                    return { label: '开关', name: 'switch_' + uid(), defaultValue: false, activeValue: '1', width: '100%' };
+                },
+                date: function () {
+                    return { label: '日期', name: 'date_' + uid(), defaultValue: '', min: '', max: '', required: false, width: '100%' };
+                },
+                datetime: function () {
+                    return { label: '日期时间', name: 'datetime_' + uid(), defaultValue: '', min: '', max: '', required: false, width: '100%' };
+                },
+                upload: function () {
+                    return { label: '文件上传', name: 'file_' + uid(), action: '', accept: 'image/*', multiple: false, buttonText: '点击上传', required: false, width: '100%' };
+                },
+                paragraph: function () {
+                    return { content: '这里是段落说明文字，可用于字段分组提示或填写指引。' };
+                },
+                divider: function () {
+                    return { text: '', align: 'center' };
+                },
+                rating: function () {
+                    return { label: '评分', name: 'rating_' + uid(), max: 5, defaultValue: 0, required: false, width: '100%' };
+                },
+                cascade: function () {
+                    return {
+                        label: '级联选择', name: 'cascade_' + uid(), levels: '省份,城市,区县',
+                        dataJson: '{"广东省":{"广州市":["天河区","海珠区","番禺区"],"深圳市":["南山区","福田区","罗湖区"]},"浙江省":{"杭州市":["西湖区","余杭区","滨江区"],"宁波市":["海曙区","江北区"]}}',
+                        placeholder: '请选择', required: false, width: '100%',
+                        dataSource: 'static', apiUrl: '', apiMethod: 'GET', apiPath: '', labelField: '', valueField: '', childrenField: ''
+                    };
+                },
+                richtext: function () {
+                    return { label: '富文本', name: 'richtext_' + uid(), placeholder: '请输入内容...', required: false, width: '100%' };
+                }
+            };
+
+            function createField(type) {
+                return { id: 'f_' + uid(), type: type, props: DEFAULTS[type]() };
+            }
+
+            /* ================= 属性设置 Schema ================= */
+            function SK_text(key, label, ph, inputType) {
+                return { key: key, label: label, type: 'text', ph: ph || '', inputType: inputType || 'text' };
+            }
+            function SK_area(key, label, ph) {
+                return { key: key, label: label, type: 'textarea', ph: ph || '' };
+            }
+            function SK_num(key, label) {
+                return { key: key, label: label, type: 'number' };
+            }
+            function SK_sw(key, label) {
+                return { key: key, label: label, type: 'switch' };
+            }
+            function SK_sel(key, label, options) {
+                return { key: key, label: label, type: 'select', options: options };
+            }
+            function SK_width() {
+                return { key: 'width', label: '字段宽度', type: 'select', options: [['100%', '整行'], ['50%', '半行'], ['auto', '自动（按内容）']] };
+            }
+            function SK_opts() {
+                return { key: 'options', label: '选项编辑（左侧为显示文字，右侧为提交值）', type: 'options' };
+            }
+            /* kind: options=普通选项（select/radio/checkbox），cascade=级联树数据 */
+            function SK_datasource(kind) {
+                return { key: 'dataSource', label: kind === 'cascade' ? '级联数据' : '选项数据', type: 'datasource', kind: kind };
+            }
+
+            var COMMON_LABEL = SK_text('label', '字段标签', '例如：用户名');
+            var COMMON_NAME = SK_text('name', '字段名（name）', '英文，例如：username');
+            var COMMON_REQUIRED = SK_sw('required', '必填');
+            var COMMON_WIDTH = SK_width();
+
+            var SCHEMAS = {
+                text: [COMMON_LABEL, COMMON_NAME, SK_text('placeholder', '占位提示', '请输入'), SK_text('defaultValue', '默认值'), SK_num('maxlength', '最大长度（留空不限制）'), COMMON_REQUIRED, COMMON_WIDTH],
+                textarea: [COMMON_LABEL, COMMON_NAME, SK_text('placeholder', '占位提示', '请输入'), SK_area('defaultValue', '默认值'), SK_num('rows', '可见行数'), SK_num('maxlength', '最大字数（留空不限制）'), COMMON_REQUIRED, COMMON_WIDTH],
+                number: [COMMON_LABEL, COMMON_NAME, SK_text('placeholder', '占位提示', '请输入数字'), SK_text('defaultValue', '默认值'), SK_text('min', '最小值'), SK_text('max', '最大值'), SK_text('step', '步长'), COMMON_REQUIRED, COMMON_WIDTH],
+                password: [COMMON_LABEL, COMMON_NAME, SK_text('placeholder', '占位提示', '请输入密码'), COMMON_REQUIRED, COMMON_WIDTH],
+                email: [COMMON_LABEL, COMMON_NAME, SK_text('placeholder', '占位提示', '请输入邮箱'), SK_text('defaultValue', '默认值'), SK_num('maxlength', '最大长度（留空不限制）'), COMMON_REQUIRED, COMMON_WIDTH],
+                tel: [COMMON_LABEL, COMMON_NAME, SK_text('placeholder', '占位提示', '请输入手机号'), SK_text('defaultValue', '默认值'), SK_num('maxlength', '最大长度（留空不限制）'), COMMON_REQUIRED, COMMON_WIDTH],
+                select: [COMMON_LABEL, COMMON_NAME, SK_datasource('options'), SK_text('placeholder', '空选项提示文字', '请选择'), SK_text('defaultValue', '默认选中值（填写选项的提交值）'), COMMON_REQUIRED, COMMON_WIDTH],
+                radio: [COMMON_LABEL, COMMON_NAME, SK_datasource('options'), SK_text('defaultValue', '默认选中值（填写选项的提交值）'), SK_sw('inline', '横向排列'), COMMON_REQUIRED, COMMON_WIDTH],
+                checkbox: [COMMON_LABEL, COMMON_NAME, SK_datasource('options'), SK_text('defaultValue', '默认选中值（多个值用英文逗号分隔）'), SK_sw('inline', '横向排列'), COMMON_REQUIRED, COMMON_WIDTH],
+                switch: [COMMON_LABEL, COMMON_NAME, SK_sw('defaultValue', '默认开启'), SK_text('activeValue', '勾选时提交的值', '1'), COMMON_WIDTH],
+                date: [COMMON_LABEL, COMMON_NAME, SK_text('defaultValue', '默认日期', '', 'date'), SK_text('min', '最早日期', '', 'date'), SK_text('max', '最晚日期', '', 'date'), COMMON_REQUIRED, COMMON_WIDTH],
+                datetime: [COMMON_LABEL, COMMON_NAME, SK_text('defaultValue', '默认日期时间', '', 'datetime-local'), SK_text('min', '最早日期时间', '', 'datetime-local'), SK_text('max', '最晚日期时间', '', 'datetime-local'), COMMON_REQUIRED, COMMON_WIDTH],
+                upload: [COMMON_LABEL, COMMON_NAME, SK_text('action', '上传接口地址', 'https://example.com/api/upload'), SK_text('accept', '接受文件类型', 'image/*'), SK_sw('multiple', '允许上传多个文件'), SK_text('buttonText', '按钮文字', '点击上传'), COMMON_REQUIRED, COMMON_WIDTH],
+                paragraph: [SK_area('content', '段落内容')],
+                divider: [SK_text('text', '分割线文字（留空为纯横线）'), SK_sel('align', '文字对齐', [['center', '居中'], ['left', '靠左'], ['right', '靠右']])],
+                rating: [COMMON_LABEL, COMMON_NAME, SK_num('max', '最大星数'), SK_text('defaultValue', '默认评分（0-最大星数）'), COMMON_REQUIRED, COMMON_WIDTH],
+                cascade: [COMMON_LABEL, COMMON_NAME, SK_text('levels', '层级名称（逗号分隔）', '省份,城市,区县'), SK_datasource('cascade'), SK_text('placeholder', '空选项提示文字', '请选择'), COMMON_REQUIRED, COMMON_WIDTH],
+                richtext: [COMMON_LABEL, COMMON_NAME, SK_text('placeholder', '占位提示', '请输入内容...'), COMMON_REQUIRED, COMMON_WIDTH]
+            };
+
+            var LAYOUT_TYPES = { paragraph: true, divider: true };
+
+            /* ================= 状态 ================= */
+            var fields = [];
+            var formConf = { title: '未命名表单', action: '', submitText: '提交' };
+            var selectedId = null;
+            var editingId = null;
+            var dragData = null;
+            var dropIdx = -1;
+            var lastPaletteDragEnd = 0;
+            var STORE_KEY = 'vfd_draft_v1';
+
+            var listEl = $('canvasList');
+            var paletteEl = $('palette');
+            var sheetTitleEl = $('sheetTitle');
+
+            /* ================= 字段 HTML（设计区 / 预览 / 导出共用） ================= */
+            function labelLine(p) {
+                return '<div class="f-label"><span>' + esc(p.label || '') + '</span>' + (p.required ? '<span class="req">*</span>' : '') + '</div>';
+            }
+
+            /* 接口数据源的公共 data 属性（供导出运行时读取） */
+            function dsApiAttrs(p, extra) {
+                if (p.dataSource !== 'api') return '';
+                return ' data-api-options="1"'
+                    + ' data-api-url="' + esc(p.apiUrl || '') + '"'
+                    + ' data-api-method="' + esc(p.apiMethod || 'GET') + '"'
+                    + ' data-api-path="' + esc(p.apiPath || '') + '"'
+                    + ' data-api-label="' + esc(p.labelField || '') + '"'
+                    + ' data-api-value="' + esc(p.valueField || '') + '"'
+                    + (extra || '');
+            }
+
+            /* 数据来源徽标（设计区 / 预览均显示） */
+            function dsBadge(p) {
+                if (p.dataSource !== 'api') return '';
+                return '<span class="ds-badge"><span class="ds-tag">API</span>'
+                    + '<span class="ds-badge-url">' + esc((p.apiMethod || 'GET') + ' ' + (p.apiUrl || '')) + '</span></span>';
+            }
+
+            function optionsHtml(f, kind, mode) {
+                var p = f.props;
+                var isApi = p.dataSource === 'api';
+                var name = kind === 'checkbox' ? esc(p.name) + '[]' : esc(p.name);
+                var defs = String(p.defaultValue || '').split(',').map(function (s) { return s.trim(); });
+                var tabAttr = mode === 'design' ? ' tabindex="-1"' : '';
+                var rows;
+                if (isApi && mode !== 'design') {
+                    /* 预览/导出：等待接口加载 */
+                    rows = '<span class="api-loading">选项加载中…</span>';
+                } else if (isApi && !(p.options || []).length) {
+                    /* 设计区且无静态兜底选项 */
+                    rows = '<span class="api-loading">选项由接口加载</span>';
+                } else {
+                    rows = (p.options || []).map(function (o) {
+                        var checked = kind === 'radio' ? defs[0] === o.value : defs.indexOf(o.value) >= 0;
+                        return '<label class="opt"><input type="' + kind + '" name="' + name + '" value="' + esc(o.value) + '"'
+                            + (checked ? ' checked' : '')
+                            + (kind === 'radio' && p.required && !isApi ? ' required' : '')
+                            + tabAttr + '><span class="opt-text">' + esc(o.label) + '</span></label>';
+                    }).join('');
+                }
+                var groupAttr = '';
+                if (isApi) {
+                    groupAttr = dsApiAttrs(p, ' data-kind="' + kind + '" data-name="' + esc(p.name) + '"'
+                        + (p.required ? ' data-required="1"' : '') + ' data-inline="' + (p.inline ? '1' : '0') + '"');
+                } else if (kind === 'checkbox' && p.required) {
+                    groupAttr = ' data-check-required="1"';
+                }
+                return '<div class="f-opts' + (p.inline ? ' inline' : '') + '"' + groupAttr + '>' + rows + '</div>'
+                    + (isApi ? dsBadge(p) : '');
+            }
+
+            function fieldHtml(f, mode) {
+                mode = mode || 'export';
+                var p = f.props;
+                var half = p.width === '50%' ? ' half' : (p.width === 'auto' ? ' auto' : '');
+                var rowCls = 'f-row' + (mode === 'export' ? half : '');
+                var designCtrl = mode === 'design' ? ' readonly tabindex="-1"' : '';
+                var tabOnly = mode === 'design' ? ' tabindex="-1"' : '';
+
+                if (f.type === 'paragraph') {
+                    return '<div class="f-row"><div class="f-paragraph">' + nl2br(esc(p.content || '')) + '</div></div>';
+                }
+
+                if (f.type === 'divider') {
+                    if (p.text) {
+                        var alignCls = p.align === 'left' || p.align === 'right' ? ' ' + p.align : '';
+                        return '<div class="f-row"><div class="f-divider' + alignCls + '"><span>' + esc(p.text) + '</span></div></div>';
+                    }
+                    return '<div class="f-row"><hr class="f-hr"></div>';
+                }
+
+                var inner = labelLine(p);
+
+                switch (f.type) {
+                    case 'textarea':
+                        inner += '<textarea class="inp"' + attr('name', p.name) + attr('placeholder', p.placeholder)
+                            + (p.rows ? ' rows="' + esc(p.rows) + '"' : '')
+                            + attr('maxlength', p.maxlength)
+                            + (p.required ? ' required' : '')
+                            + designCtrl + '>' + esc(p.defaultValue) + '</textarea>';
+                        break;
+
+                    case 'select':
+                        var selApi = p.dataSource === 'api';
+                        var selBody;
+                        if (selApi && mode !== 'design') {
+                            selBody = '<option value="" disabled>加载中…</option>';
+                        } else if (selApi && !(p.options || []).length) {
+                            selBody = '<option value="" disabled>选项由接口加载</option>';
+                        } else {
+                            selBody = (p.options || []).map(function (o) {
+                                return '<option value="' + esc(o.value) + '"' + (!selApi && p.defaultValue === o.value ? ' selected' : '') + '>' + esc(o.label) + '</option>';
+                            }).join('');
+                        }
+                        inner += '<select class="inp"' + attr('name', p.name) + tabOnly
+                            + (selApi ? dsApiAttrs(p, ' data-placeholder="' + esc(p.placeholder || '请选择') + '" data-required="' + (p.required ? '1' : '0') + '"') : '')
+                            + (!selApi && p.required ? ' required' : '') + '>'
+                            + '<option value="" selected>' + esc(p.placeholder || '请选择') + '</option>'
+                            + selBody
+                            + '</select>' + (selApi ? dsBadge(p) : '');
+                        break;
+
+                    case 'radio':
+                        inner += optionsHtml(f, 'radio', mode);
+                        break;
+
+                    case 'checkbox':
+                        inner += optionsHtml(f, 'checkbox', mode);
+                        break;
+
+                    case 'switch':
+                        inner += '<label class="f-switch"><input type="checkbox"' + attr('name', p.name)
+                            + ' value="' + esc(p.activeValue || '1') + '"'
+                            + (p.defaultValue ? ' checked' : '') + tabOnly + '><span class="sw"></span></label>';
+                        break;
+
+                    case 'upload':
+                        var fileName = p.multiple ? esc(p.name) + '[]' : esc(p.name);
+                        inner += '<div class="f-upload" data-upload'
+                            + ' data-action="' + esc(p.action || '') + '"'
+                            + ' data-multiple="' + (p.multiple ? '1' : '0') + '"'
+                            + ' data-required="' + (p.required ? '1' : '0') + '">'
+                            + '<input type="hidden"' + attr('name', p.name) + ' value="">'
+                            + '<input class="upload-real" type="file"' + attr('name', fileName) + attr('accept', p.accept)
+                            + (p.multiple ? ' multiple' : '') + ' tabindex="-1">'
+                            + '<button type="button" class="upload-btn"' + tabOnly + '>' + icon('upload') + '<span>' + esc(p.buttonText || '点击上传') + '</span></button>'
+                            + '<span class="upload-status"></span></div>';
+                        break;
+
+                    case 'rating':
+                        var maxStars = parseInt(p.max, 10) || 5;
+                        var initVal = parseInt(p.defaultValue, 10) || 0;
+                        var starsHtml = '';
+                        for (var si = 1; si <= maxStars; si++) {
+                            starsHtml += '<span class="star' + (si <= initVal ? ' active' : '') + '" data-val="' + si + '">&#9733;</span>';
+                        }
+                        inner += '<div class="f-rating" data-rating data-name="' + esc(p.name) + '" data-max="' + maxStars + '" data-value="' + initVal + '"'
+                            + (p.required ? ' data-required="1"' : '') + '>'
+                            + '<input type="hidden"' + attr('name', p.name) + ' value="' + initVal + '">'
+                            + '<span class="stars"' + tabOnly + '>' + starsHtml + '</span>'
+                            + '<span class="rating-text">' + (initVal > 0 ? initVal + '/' + maxStars : '') + '</span>'
+                            + '</div>';
+                        break;
+
+                    case 'cascade':
+                        var casApi = p.dataSource === 'api';
+                        var casLevels = (p.levels || '层级').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+                        if (!casLevels.length) casLevels = ['层级'];
+                        var casDataStr = casApi ? '' : esc(p.dataJson || '{}');
+                        var casApiAttrs = casApi
+                            ? ' data-api-cascade="1" data-api-url="' + esc(p.apiUrl || '') + '"'
+                            + ' data-api-method="' + esc(p.apiMethod || 'GET') + '"'
+                            + ' data-api-path="' + esc(p.apiPath || '') + '"'
+                            + ' data-api-label="' + esc(p.labelField || '') + '"'
+                            + ' data-api-value="' + esc(p.valueField || '') + '"'
+                            + ' data-api-children="' + esc(p.childrenField || '') + '"'
+                            : '';
+                        inner += '<div class="f-cascade" data-cascade data-name="' + esc(p.name) + '" data-levels="' + esc(casLevels.join(',')) + '"'
+                            + ' data-json="' + casDataStr + '"'
+                            + ' data-placeholder="' + esc(p.placeholder || '请选择') + '"'
+                            + casApiAttrs
+                            + (p.required ? ' data-required="1"' : '') + '>'
+                            + '<input type="hidden"' + attr('name', p.name) + ' value="">'
+                            + casLevels.map(function (lvName, idx) {
+                                var ph = p.placeholder || '请选择';
+                                var dis = idx > 0 ? ' disabled' : '';
+                                return '<select class="inp cascade-sel" data-level="' + idx + '"' + dis + tabOnly + '>'
+                                    + '<option value="">' + esc(ph) + esc(lvName) + '</option>'
+                                    + '</select>';
+                            }).join('')
+                            + '</div>' + (casApi ? dsBadge(p) : '');
+                        break;
+
+                    case 'richtext':
+                        inner += '<div class="f-richtext" data-richtext data-name="' + esc(p.name) + '"'
+                            + (p.required ? ' data-required="1"' : '') + '>'
+                            + '<input type="hidden"' + attr('name', p.name) + ' value="">'
+                            + '<div class="rt-toolbar">'
+                            + '<button type="button" class="rt-btn" data-cmd="bold"' + tabOnly + ' title="加粗"><b>B</b></button>'
+                            + '<button type="button" class="rt-btn" data-cmd="italic"' + tabOnly + ' title="斜体"><i>I</i></button>'
+                            + '<button type="button" class="rt-btn" data-cmd="underline"' + tabOnly + ' title="下划线"><u>U</u></button>'
+                            + '<button type="button" class="rt-btn" data-cmd="insertUnorderedList"' + tabOnly + ' title="无序列表">&#8226;列表</button>'
+                            + '<button type="button" class="rt-btn" data-cmd="insertOrderedList"' + tabOnly + ' title="有序列表">1.列表</button>'
+                            + '<button type="button" class="rt-btn" data-cmd="formatBlock" data-val="blockquote"' + tabOnly + ' title="引用">引用</button>'
+                            + '<button type="button" class="rt-btn" data-cmd="createLink"' + tabOnly + ' title="插入链接">链接</button>'
+                            + '<button type="button" class="rt-btn" data-cmd="removeFormat"' + tabOnly + ' title="清除格式">清除</button>'
+                            + '</div>'
+                            + '<div class="rt-editor" contenteditable="true" data-placeholder="' + esc(p.placeholder || '请输入内容...') + '"' + tabOnly + '></div>'
+                            + '</div>';
+                        break;
+
+                    default:
+                        var inputType = f.type === 'datetime' ? 'datetime-local' : f.type;
+                        var extra = '';
+                        if (f.type === 'number') {
+                            extra = attr('min', p.min) + attr('max', p.max) + attr('step', p.step);
+                        } else if (f.type === 'text' || f.type === 'email' || f.type === 'tel' || f.type === 'password') {
+                            extra = attr('maxlength', p.maxlength);
+                        } else if (f.type === 'date' || f.type === 'datetime') {
+                            extra = attr('min', p.min) + attr('max', p.max);
+                        }
+                        inner += '<input class="inp" type="' + inputType + '"'
+                            + attr('name', p.name) + attr('placeholder', p.placeholder) + attr('value', p.defaultValue)
+                            + extra + (p.required ? ' required' : '')
+                            + (f.type === 'date' || f.type === 'datetime' ? tabOnly : designCtrl) + '>';
+                        break;
+                }
+
+                return '<div class="' + rowCls + '">' + inner + '</div>';
+            }
+
+            /* ================= 组件面板渲染 ================= */
+            function renderPalette() {
+                paletteEl.innerHTML = GROUPS.map(function (g) {
+                    return '<div class="pal-group"><div class="group-title">' + g.title + '</div>'
+                        + g.items.map(function (it) {
+                            return '<div class="pal-item" draggable="true" data-type="' + it.type + '">'
+                                + '<span class="pal-icon">' + icon(it.icon) + '</span>'
+                                + '<span class="pal-label">' + it.label + '</span>'
+                                + '<span class="pal-add">' + icon('plus') + '</span></div>';
+                        }).join('') + '</div>';
+                }).join('');
+            }
+
+            /* ================= 设计区渲染 ================= */
+            function canvasItemHtml(f) {
+                var half = f.props.width === '50%' ? ' half' : (f.props.width === 'auto' ? ' auto' : '');
+                var selected = f.id === selectedId ? ' selected' : '';
+                return '<div class="cf' + half + selected + '" data-id="' + f.id + '" draggable="true">'
+                    + '<div class="cf-inner">'
+                    + '<div class="cf-tools">'
+                    + '<button class="tbtn" type="button" data-act="setting" title="属性设置">' + icon('gear') + '</button>'
+                    + '<button class="tbtn del" type="button" data-act="delete" title="删除">' + icon('trash') + '</button>'
+                    + '</div>'
+                    + '<div class="cf-body fx">' + fieldHtml(f, 'design') + '</div>'
+                    + '</div></div>';
+            }
+
+            function renderCanvas() {
+                sheetTitleEl.textContent = formConf.title || '未命名表单';
+                if (!fields.length) {
+                    listEl.innerHTML = '<div class="empty-hint">' + icon('inbox')
+                        + '<div class="t1">拖拽右侧组件到此处</div>'
+                        + '<div class="t2">或点击右侧组件直接添加到末尾</div></div>';
+                    return;
+                }
+                listEl.innerHTML = fields.map(canvasItemHtml).join('');
+            }
+
+            function getLine() {
+                var line = listEl.querySelector('.drop-line');
+                if (!line) {
+                    line = document.createElement('div');
+                    line.className = 'drop-line';
+                }
+                return line;
+            }
+
+            function clearIndicator() {
+                var line = listEl.querySelector('.drop-line');
+                if (line) line.remove();
+                listEl.classList.remove('drag-over');
+                dropIdx = -1;
+            }
+
+            function visibleCfs(excludeDragging) {
+                return Array.prototype.slice.call(listEl.querySelectorAll('.cf')).filter(function (el) {
+                    return !(excludeDragging && el.classList.contains('dragging'));
+                });
+            }
+
+            function computeIndex(clientY) {
+                var cfs = visibleCfs(dragData && dragData.source === 'canvas');
+                for (var i = 0; i < cfs.length; i++) {
+                    var r = cfs[i].getBoundingClientRect();
+                    if (clientY < r.top + r.height / 2) return i;
+                }
+                return cfs.length;
+            }
+
+            function placeIndicator(idx) {
+                dropIdx = idx;
+                listEl.classList.add('drag-over');
+                var line = getLine();
+                var cfs = visibleCfs(dragData && dragData.source === 'canvas');
+                var ref = cfs[idx] || null;
+                if (ref) {
+                    listEl.insertBefore(line, ref);
+                } else {
+                    listEl.appendChild(line);
+                }
+            }
+
+            /* ================= 字段增删改 ================= */
+            function addField(type, index) {
+                var f = createField(type);
+                if (index === undefined || index === null || index < 0 || index > fields.length) {
+                    fields.push(f);
+                } else {
+                    fields.splice(index, 0, f);
+                }
+                selectedId = f.id;
+                renderCanvas();
+                saveDraft();
+            }
+
+            function deleteField(id) {
+                var idx = fields.findIndex(function (f) { return f.id === id; });
+                if (idx < 0) return;
+                fields.splice(idx, 1);
+                if (selectedId === id) selectedId = null;
+                renderCanvas();
+                saveDraft();
+                toast('已删除');
+            }
+
+            /* ================= 属性设置弹窗 ================= */
+            function optionRowHtml(o) {
+                return '<div class="opt-row">'
+                    + '<input class="si opt-label" type="text" value="' + esc(o.label) + '" placeholder="选项文字">'
+                    + '<input class="si opt-value" type="text" value="' + esc(o.value) + '" placeholder="提交值">'
+                    + '<button class="opt-del" type="button" title="删除该选项">' + icon('trash') + '</button>'
+                    + '</div>';
+            }
+
+            /* 数据源复合控件：静态选项 / 接口获取 两种来源 */
+            function renderDatasourceControl(item) {
+                var f = fields.find(function (x) { return x.id === editingId; });
+                var p = f ? f.props : {};
+                var kind = item.kind || 'options';
+                var source = p.dataSource === 'api' ? 'api' : 'static';
+
+                function dsInput(subKey, label, ph, inputType) {
+                    return '<div class="ds-field"><label class="sl">' + esc(label) + '</label>'
+                        + '<input class="si" type="' + (inputType || 'text') + '" data-sub-key="' + subKey + '"'
+                        + ' value="' + esc(p[subKey] == null ? '' : p[subKey]) + '" placeholder="' + esc(ph || '') + '"></div>';
+                }
+
+                /* 静态数据面板 */
+                var staticPanel;
+                if (kind === 'cascade') {
+                    staticPanel = '<div class="ds-field"><label class="sl">级联数据（JSON 格式，支持对象嵌套）</label>'
+                        + '<textarea class="si" data-sub-key="dataJson" placeholder="{&quot;广东省&quot;:{&quot;广州市&quot;:[&quot;天河区&quot;]}}">'
+                        + esc(p.dataJson || '{}') + '</textarea>'
+                        + '<div class="set-hint">对象嵌套表示层级，最后一层为字符串数组；也支持 [{label,value,children}] 树形数组。</div></div>';
+                } else {
+                    var rows = (p.options || []).map(optionRowHtml).join('');
+                    staticPanel = '<div class="opt-box" data-options-box>' + rows
+                        + '<button class="btn ghost" type="button" data-act="add-opt">' + icon('plus') + '添加选项</button></div>';
+                }
+
+                /* 接口配置面板 */
+                var methodGet = (p.apiMethod || 'GET') === 'GET';
+                var apiPanel = '<div>'
+                    + dsInput('apiUrl', '接口地址', 'https://example.com/api/options')
+                    + '<div class="ds-field"><label class="sl">请求方法</label>'
+                    + '<select class="si" data-sub-key="apiMethod">'
+                    + '<option value="GET"' + (methodGet ? ' selected' : '') + '>GET</option>'
+                    + '<option value="POST"' + (!methodGet ? ' selected' : '') + '>POST</option>'
+                    + '</select></div>'
+                    + dsInput('apiPath', '数据路径（点号分隔，留空取整个返回）', 'data.list')
+                    + '<div class="ds-field"><div style="display:flex;gap:8px">'
+                    + '<div style="flex:1"><label class="sl">标签字段名</label><input class="si" type="text" data-sub-key="labelField" value="' + esc(p.labelField || '') + '" placeholder="label（默认）"></div>'
+                    + '<div style="flex:1"><label class="sl">值字段名</label><input class="si" type="text" data-sub-key="valueField" value="' + esc(p.valueField || '') + '" placeholder="value（默认）"></div>'
+                    + '</div></div>';
+                if (kind === 'cascade') {
+                    apiPanel += '<div class="ds-field"><label class="sl">子级字段名</label>'
+                        + '<input class="si" type="text" data-sub-key="childrenField" value="' + esc(p.childrenField || '') + '" placeholder="children（默认）"></div>'
+                        + '<div class="set-hint" style="margin:0 0 10px">接口需返回树形数组，每项包含标签、值和子级数组。</div>';
+                } else {
+                    apiPanel += '<div class="set-hint" style="margin:0 0 10px">接口需返回数组，每项为字符串或包含标签/值字段的对象，例如：{"code":0,"data":{"list":[{"label":"选项一","value":1}]}}。</div>';
+                }
+                apiPanel += '<button class="btn" type="button" data-act="test-api" style="width:100%;justify-content:center">'
+                    + icon('eye') + '测试接口</button>'
+                    + '<div class="api-test-result" data-api-test-result></div>'
+                    + '</div>';
+
+                return '<div class="ds-box" data-ds-box="' + kind + '">'
+                    + '<div class="ds-tabs">'
+                    + '<button type="button" class="ds-tab' + (source === 'static' ? ' is-active' : '') + '" data-act="ds-tab" data-tab="static">静态数据</button>'
+                    + '<button type="button" class="ds-tab' + (source === 'api' ? ' is-active' : '') + '" data-act="ds-tab" data-tab="api">接口获取</button>'
+                    + '</div>'
+                    + '<input type="hidden" data-key="dataSource" value="' + source + '">'
+                    + '<div class="ds-panel" data-panel="static"' + (source === 'api' ? ' hidden' : '') + '>' + staticPanel + '</div>'
+                    + '<div class="ds-panel" data-panel="api"' + (source === 'static' ? ' hidden' : '') + '>' + apiPanel + '</div>'
+                    + '</div>';
+            }
+
+            function renderSettingControl(item, value) {
+                var key = ' data-key="' + item.key + '"';
+                switch (item.type) {
+                    case 'textarea':
+                        return '<textarea class="si"' + key + ' placeholder="' + esc(item.ph || '') + '">' + esc(value == null ? '' : value) + '</textarea>';
+                    case 'number':
+                        return '<input class="si" type="text" inputmode="decimal"' + key + ' value="' + esc(value == null ? '' : value) + '" placeholder="留空则不限制">';
+                    case 'switch':
+                        return '<label class="mswitch"><input type="checkbox"' + key + (value ? ' checked' : '') + '><span class="mswitch-track"></span><span class="mswitch-label">' + esc(item.label) + '</span></label>';
+                    case 'select':
+                        return '<select class="si"' + key + '>' + item.options.map(function (op) {
+                            return '<option value="' + esc(op[0]) + '"' + (String(value) === String(op[0]) ? ' selected' : '') + '>' + esc(op[1]) + '</option>';
+                        }).join('') + '</select>';
+                    case 'options':
+                        var rows = (value || []).map(optionRowHtml).join('');
+                        return '<div class="opt-box" data-options-box>' + rows
+                            + '<button class="btn ghost" type="button" data-act="add-opt">' + icon('plus') + '添加选项</button></div>';
+                    case 'datasource':
+                        return renderDatasourceControl(item);
+                    default:
+                        return '<input class="si" type="' + (item.inputType || 'text') + '"' + key
+                            + ' value="' + esc(value == null ? '' : value) + '" placeholder="' + esc(item.ph || '') + '">';
+                }
+            }
+
+            function openFieldSettings(id) {
+                var f = fields.find(function (x) { return x.id === id; });
+                if (!f) return;
+                editingId = id;
+                $('settingsTitle').textContent = '字段属性 · ' + (TYPE_LABELS[f.type] || f.type);
+                var schema = SCHEMAS[f.type] || [];
+                $('settingsBody').innerHTML = schema.map(function (item) {
+                    var control = renderSettingControl(item, f.props[item.key]);
+                    if (item.type === 'switch') {
+                        return '<div class="set-row">' + control + '</div>';
+                    }
+                    return '<div class="set-row"><label class="sl">' + esc(item.label) + '</label>' + control + '</div>';
+                }).join('');
+                openMask($('settingsMask'));
+            }
+
+            function collectOptions() {
+                return Array.prototype.slice.call($('settingsBody').querySelectorAll('.opt-row')).map(function (row) {
+                    return {
+                        label: row.querySelector('.opt-label').value.trim(),
+                        value: row.querySelector('.opt-value').value.trim()
+                    };
+                }).filter(function (o) {
+                    return o.label !== '';
+                }).map(function (o) {
+                    if (o.value === '') o.value = o.label;
+                    return o;
+                });
+            }
+
+            /* 收集数据源复合控件的所有字段 */
+            function collectDatasource(patch, kind) {
+                var box = $('settingsBody').querySelector('[data-ds-box]');
+                if (!box) return;
+                var source = box.querySelector('[data-key="dataSource"]').value;
+                patch.dataSource = source === 'api' ? 'api' : 'static';
+                ['apiUrl', 'apiMethod', 'apiPath', 'labelField', 'valueField', 'childrenField'].forEach(function (k) {
+                    var inp = box.querySelector('[data-sub-key="' + k + '"]');
+                    if (inp) patch[k] = inp.value.trim();
+                });
+                if (patch.dataSource === 'static') {
+                    if (kind === 'cascade') {
+                        var jsonArea = box.querySelector('[data-sub-key="dataJson"]');
+                        patch.dataJson = jsonArea ? jsonArea.value : '{}';
+                    } else {
+                        patch.options = collectOptions();
+                    }
+                }
+            }
+
+            /* 按点号路径取数据，如 data.list */
+            function resolveDataPath(obj, path) {
+                if (!path) return obj;
+                var cur = obj;
+                path.split('.').forEach(function (seg) {
+                    if (cur == null) return;
+                    cur = cur[seg];
+                });
+                return cur;
+            }
+
+            function pickField(item, customKey, a, b) {
+                if (customKey && item[customKey] != null && item[customKey] !== '') return item[customKey];
+                if (item[a] != null && item[a] !== '') return item[a];
+                return item[b];
+            }
+
+            /* 设置弹窗中的"测试接口" */
+            function testDatasourceApi(box, btn) {
+                var kind = box.getAttribute('data-ds-box');
+                var cfg = {
+                    url: box.querySelector('[data-sub-key="apiUrl"]').value.trim(),
+                    method: box.querySelector('[data-sub-key="apiMethod"]').value || 'GET',
+                    path: box.querySelector('[data-sub-key="apiPath"]').value.trim(),
+                    labelField: box.querySelector('[data-sub-key="labelField"]').value.trim(),
+                    valueField: box.querySelector('[data-sub-key="valueField"]').value.trim(),
+                    childrenField: (box.querySelector('[data-sub-key="childrenField"]') || {}).value
+                };
+                var resultEl = box.querySelector('[data-api-test-result]');
+                if (!cfg.url) {
+                    resultEl.className = 'api-test-result err';
+                    resultEl.textContent = '请先填写接口地址';
+                    return;
+                }
+                btn.disabled = true;
+                resultEl.className = 'api-test-result';
+                resultEl.textContent = '请求中…';
+
+                fetch(cfg.url, cfg.method === 'POST' ? { method: 'POST' } : {})
+                    .then(function (res) {
+                        if (!res.ok) throw new Error('HTTP ' + res.status);
+                        return res.json();
+                    })
+                    .then(function (raw) {
+                        var arr = resolveDataPath(raw, cfg.path);
+                        if (!Array.isArray(arr)) throw new Error('数据路径"' + (cfg.path || '（根）') + '"下不是数组');
+                        if (kind === 'cascade') {
+                            var chKey = cfg.childrenField ? cfg.childrenField.trim() : 'children';
+                            var count = 0;
+                            function walk(list, depth) {
+                                list.forEach(function (it) {
+                                    count++;
+                                    if (it && typeof it === 'object') {
+                                        var ch = it[chKey] || it.children;
+                                        if (Array.isArray(ch) && ch.length) walk(ch, depth + 1);
+                                    }
+                                });
+                            }
+                            walk(arr, 1);
+                            resultEl.className = 'api-test-result ok';
+                            resultEl.textContent = '测试成功：共 ' + count + ' 个节点，一级 ' + arr.length + ' 个';
+                        } else {
+                            var sample = arr.slice(0, 3).map(function (it) {
+                                if (it && typeof it === 'object') {
+                                    return String(pickField(it, cfg.labelField, 'label', 'name'));
+                                }
+                                return String(it);
+                            });
+                            resultEl.className = 'api-test-result ok';
+                            resultEl.textContent = '测试成功：共 ' + arr.length + ' 条数据，前几项：' + sample.join('、');
+                        }
+                    })
+                    .catch(function (err) {
+                        resultEl.className = 'api-test-result err';
+                        resultEl.textContent = '请求失败：' + err.message;
+                    })
+                    .then(function () {
+                        btn.disabled = false;
+                    });
+            }
+
+            function saveFieldSettings() {
+                var f = fields.find(function (x) { return x.id === editingId; });
+                if (!f) { closeMask($('settingsMask')); return; }
+                var schema = SCHEMAS[f.type] || [];
+                var patch = {};
+                var missing = false;
+
+                schema.forEach(function (item) {
+                    var node = $('settingsBody').querySelector('[data-key="' + item.key + '"]');
+                    if (item.type === 'switch') {
+                        patch[item.key] = node.checked;
+                    } else if (item.type === 'options') {
+                        patch.options = collectOptions();
+                    } else if (item.type === 'datasource') {
+                        collectDatasource(patch, item.kind);
+                    } else {
+                        patch[item.key] = node.value;
+                    }
+                });
+
+                if (!LAYOUT_TYPES[f.type]) {
+                    if (!patch.label || !patch.label.trim()) {
+                        toast('请填写字段标签');
+                        return;
+                    }
+                    if (!patch.name || !patch.name.trim()) {
+                        toast('请填写字段名（name）');
+                        return;
+                    }
+                    if (!/^[A-Za-z_][A-Za-z0-9_-]*$/.test(patch.name.trim())) {
+                        toast('字段名需以字母或下划线开头，只能包含字母、数字、下划线、中划线');
+                        return;
+                    }
+                    var dup = fields.some(function (o) {
+                        return o.id !== f.id && o.props && o.props.name === patch.name.trim();
+                    });
+                    if (dup) {
+                        toast('字段名「' + patch.name + '」已存在，请更换');
+                        return;
+                    }
+                    patch.name = patch.name.trim();
+                    var isOptionsType = (f.type === 'select' || f.type === 'radio' || f.type === 'checkbox');
+                    var isApi = patch.dataSource === 'api';
+                    if (isOptionsType || f.type === 'cascade') {
+                        if (isApi) {
+                            if (!patch.apiUrl) {
+                                toast('请填写接口地址');
+                                return;
+                            }
+                        } else {
+                            if (isOptionsType && (!patch.options || !patch.options.length)) {
+                                toast('请至少添加一个选项');
+                                return;
+                            }
+                            if (f.type === 'cascade') {
+                                try {
+                                    var parsed = JSON.parse(patch.dataJson || '{}');
+                                    if (typeof parsed !== 'object' || parsed === null) throw new Error('bad');
+                                } catch (e) {
+                                    toast('级联数据不是有效的 JSON 格式');
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                    if (f.type === 'rating') {
+                        var mx = parseInt(patch.max, 10);
+                        if (!mx || mx < 1 || mx > 20) {
+                            toast('最大星数请填 1-20 之间的整数');
+                            return;
+                        }
+                    }
+                }
+
+                Object.assign(f.props, patch);
+                closeMask($('settingsMask'));
+                editingId = null;
+                renderCanvas();
+                saveDraft();
+                toast('属性已保存');
+            }
+
+            /* ================= 弹窗通用 ================= */
+            function openMask(mask) {
+                mask.classList.add('show');
+            }
+            function closeMask(mask) {
+                mask.classList.remove('show');
+            }
+            function closeTopMask() {
+                var shown = document.querySelectorAll('.modal-mask.show');
+                if (shown.length) shown[shown.length - 1].classList.remove('show');
+            }
+
+            function confirmBox(title, text) {
+                return new Promise(function (resolve) {
+                    $('confirmTitle').textContent = title;
+                    $('confirmText').textContent = text;
+                    openMask($('confirmMask'));
+                    var mask = $('confirmMask');
+                    function done(v) {
+                        closeMask(mask);
+                        mask.removeEventListener('mclose', onCancel);
+                        resolve(v);
+                    }
+                    function onCancel() { done(false); }
+                    $('confirmOk').onclick = function () { done(true); };
+                    $('confirmCancel').onclick = function () { done(false); };
+                    mask.addEventListener('mclose', onCancel);
+                });
+            }
+
+            var toastTimer = null;
+            function toast(msg) {
+                var el = $('toast');
+                el.textContent = msg;
+                el.classList.add('show');
+                clearTimeout(toastTimer);
+                toastTimer = setTimeout(function () {
+                    el.classList.remove('show');
+                }, 2200);
+            }
+
+            /* ================= 表单设置 ================= */
+            function openFormSettings() {
+                $('fTitle').value = formConf.title;
+                $('fAction').value = formConf.action;
+                $('fSubmit').value = formConf.submitText;
+                openMask($('formMask'));
+            }
+
+            function saveFormSettings() {
+                var title = $('fTitle').value.trim();
+                formConf.title = title || '未命名表单';
+                formConf.action = $('fAction').value.trim();
+                formConf.submitText = $('fSubmit').value.trim() || '提交';
+                closeMask($('formMask'));
+                renderCanvas();
+                saveDraft();
+                toast('表单设置已保存');
+            }
+
+            /* ================= 预览 ================= */
+            function openPreview() {
+                var rows = fields.map(function (f) { return fieldHtml(f, 'export'); }).join('');
+                $('previewBody').innerHTML = '<div class="fx">'
+                    + '<div class="pv-title">' + esc(formConf.title) + '</div>'
+                    + '<form id="pvForm">'
+                    + '<div class="form-grid">' + rows + '</div>'
+                    + '<button type="submit" class="submit-btn">' + esc(formConf.submitText) + '</button>'
+                    + '<p class="form-msg" data-form-msg></p>'
+                    + '</form></div>';
+                openMask($('previewMask'));
+                bootstrapForm($('pvForm'), { action: formConf.action });
+            }
+
+            /* ================= 导出 HTML ================= */
+            function exportHtml() {
+                var sharedCss = $('sharedFormStyle').textContent;
+                var rows = fields.map(function (f) { return fieldHtml(f, 'export'); }).join('\n                        ');
+
+                var html = [
+                    '<!DOCTYPE html>',
+                    '<html lang="zh-CN">',
+                    '<head>',
+                    '    <meta charset="UTF-8">',
+                    '    <meta name="viewport" content="width=device-width, initial-scale=1.0">',
+                    '    <title>' + esc(formConf.title) + '</title>',
+                    '    <style>',
+                    '        * { margin: 0; padding: 0; box-sizing: border-box; }',
+                    '        :root {',
+                    '            --bg: #07090d; --card: #10151d; --border: #232e3f;',
+                    '            --text: #e8edf4; --dim: #8b95a6; --accent: #22d3ee;',
+                    '            --red: #f87171; --green: #34d399;',
+                    '        }',
+                    '        html, body { min-height: 100%; }',
+                    '        body {',
+                    '            background: var(--bg);',
+                    '            background-image: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(34,211,238,.08), transparent 60%);',
+                    '            color: var(--text);',
+                    '            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;',
+                    '            padding: 40px 16px;',
+                    '        }',
+                    '        .page { max-width: 640px; margin: 0 auto; }',
+                    '        .form-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 32px; }',
+                    '        .form-title { font-size: 22px; font-weight: 600; margin-bottom: 24px; }',
+                    sharedCss,
+                    '    </style>',
+                    '</head>',
+                    '<body>',
+                    '    <div class="page">',
+                    '        <div class="form-card fx">',
+                    '            <h1 class="form-title">' + esc(formConf.title) + '</h1>',
+                    '            <form>',
+                    '                <div class="form-grid">',
+                    '                        ' + rows,
+                    '                </div>',
+                    '                <button type="submit" class="submit-btn">' + esc(formConf.submitText) + '</button>',
+                    '                <p class="form-msg" data-form-msg></p>',
+                    '            </form>',
+                    '        </div>',
+                    '    </div>',
+                    '    <script>',
+                    '        (' + bootstrapForm.toString() + ')(document.querySelector("form"), ' + JSON.stringify({ action: formConf.action || '' }) + ');',
+                    '    <\/script>',
+                    '</body>',
+                    '</html>',
+                    ''
+                ].join('\n');
+
+                var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement('a');
+                var fileName = (formConf.title || 'form').replace(/[\\/:*?"<>|]+/g, '_').trim() || 'form';
+                a.href = url;
+                a.download = fileName + '.html';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+                toast('HTML 文件已导出');
+            }
+
+            /* ================= 导出表单的运行时（预览同样调用） ================= */
+            function bootstrapForm(form, opts) {
+                opts = opts || {};
+
+                /* 导出后独立运行所需的最小转义工具 */
+                function escHtml(s) {
+                    return String(s == null ? '' : s)
+                        .replace(/&/g, '&amp;')
+                        .replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;')
+                        .replace(/"/g, '&quot;')
+                        .replace(/'/g, '&#39;');
+                }
+                var escAttr = escHtml;
+                var escText = escHtml;
+
+                function extractUrls(data) {
+                    var urls = [];
+                    function push(v) {
+                        if (typeof v === 'string' && v) urls.push(v);
+                    }
+                    if (!data) return urls;
+                    if (typeof data === 'string') {
+                        push(data);
+                    } else if (Array.isArray(data)) {
+                        data.forEach(function (x) {
+                            if (typeof x === 'string') push(x);
+                            else if (x && typeof x.url === 'string') push(x.url);
+                        });
+                    } else {
+                        push(data.url);
+                        if (Array.isArray(data.urls)) data.urls.forEach(push);
+                        if (data.data) {
+                            push(data.data.url);
+                            if (Array.isArray(data.data.urls)) data.data.urls.forEach(push);
+                            if (Array.isArray(data.data.list)) {
+                                data.data.list.forEach(function (x) {
+                                    if (x && typeof x.url === 'string') push(x.url);
+                                });
+                            }
+                        }
+                    }
+                    return urls;
+                }
+
+                /* 文件/图片异步上传 */
+                Array.prototype.forEach.call(form.querySelectorAll('[data-upload]'), function (wrap) {
+                    var fileInput = wrap.querySelector('input[type=file]');
+                    var hidden = wrap.querySelector('input[type=hidden]');
+                    var btn = wrap.querySelector('.upload-btn');
+                    var status = wrap.querySelector('.upload-status');
+                    var action = wrap.getAttribute('data-action');
+
+                    btn.addEventListener('click', function () {
+                        fileInput.click();
+                    });
+
+                    fileInput.addEventListener('change', function () {
+                        if (!fileInput.files.length) return;
+                        var names = Array.prototype.map.call(fileInput.files, function (f) { return f.name; });
+                        wrap.classList.remove('is-invalid');
+
+                        if (!action) {
+                            status.className = 'upload-status err';
+                            status.textContent = '未配置上传接口地址';
+                            return;
+                        }
+
+                        status.className = 'upload-status';
+                        status.textContent = '上传中…';
+                        var fd = new FormData();
+                        Array.prototype.forEach.call(fileInput.files, function (f) {
+                            fd.append(fileInput.name, f);
+                        });
+
+                        fetch(action, { method: 'POST', body: fd }).then(function (res) {
+                            if (!res.ok) throw new Error('HTTP ' + res.status);
+                            var ct = res.headers.get('content-type') || '';
+                            if (ct.indexOf('application/json') >= 0) return res.json();
+                            return res.text().then(function (t) {
+                                try { return JSON.parse(t); } catch (e) { return { url: t }; }
+                            });
+                        }).then(function (data) {
+                            hidden.value = extractUrls(data).join(',');
+                            fileInput.setAttribute('data-uploaded', '1');
+                            status.className = 'upload-status ok';
+                            status.textContent = '已上传：' + names.join('、');
+                        }).catch(function (err) {
+                            status.className = 'upload-status err';
+                            status.textContent = '上传失败：' + err.message;
+                        });
+                    });
+                });
+
+                /* 多选框组必填：勾选后清除错误态（事件委托，兼容接口动态加载的选项） */
+                form.addEventListener('change', function (e) {
+                    var g = e.target && e.target.closest ? e.target.closest('[data-check-required="1"]') : null;
+                    if (g) g.classList.remove('is-invalid');
+                    /* 接口下拉 / 级联变化时清除错误态 */
+                    var apiSel = e.target && e.target.closest ? e.target.closest('[data-api-options], [data-cascade]') : null;
+                    if (apiSel) apiSel.classList.remove('is-invalid');
+                });
+
+                /* 评分组件：点击星星 */
+                Array.prototype.forEach.call(form.querySelectorAll('[data-rating]'), function (wrap) {
+                    var hidden = wrap.querySelector('input[type=hidden]');
+                    var stars = wrap.querySelectorAll('.star');
+                    var textEl = wrap.querySelector('.rating-text');
+                    var max = parseInt(wrap.getAttribute('data-max'), 10) || 5;
+
+                    function paint(val, isHover) {
+                        stars.forEach(function (s) {
+                            var sv = parseInt(s.getAttribute('data-val'), 10);
+                            s.classList.toggle(isHover ? 'hover-active' : 'active', sv <= val);
+                            if (isHover) s.classList.remove('active');
+                            else s.classList.remove('hover-active');
+                        });
+                    }
+
+                    function setText(val) {
+                        textEl.textContent = val > 0 ? val + '/' + max : '';
+                    }
+
+                    stars.forEach(function (s) {
+                        s.addEventListener('click', function () {
+                            var val = parseInt(s.getAttribute('data-val'), 10);
+                            hidden.value = val;
+                            wrap.setAttribute('data-value', val);
+                            wrap.classList.remove('is-invalid');
+                            paint(val, false);
+                            setText(val);
+                        });
+                        s.addEventListener('mouseenter', function () {
+                            paint(parseInt(s.getAttribute('data-val'), 10), true);
+                        });
+                    });
+                    wrap.querySelector('.stars').addEventListener('mouseleave', function () {
+                        var cur = parseInt(hidden.value, 10) || 0;
+                        paint(cur, false);
+                    });
+                });
+
+                /* 接口数据源：下拉 / 单选组 / 多选组 运行时加载 */
+                function resolveApiPath(obj, path) {
+                    if (!path) return obj;
+                    var cur = obj;
+                    path.split('.').forEach(function (seg) {
+                        if (cur == null) return;
+                        cur = cur[seg];
+                    });
+                    return cur;
+                }
+
+                function apiPick(item, customKey, a, b) {
+                    if (customKey && item[customKey] != null && item[customKey] !== '') return item[customKey];
+                    if (item[a] != null && item[a] !== '') return item[a];
+                    return item[b];
+                }
+
+                function normalizeApiOptions(arr, labelField, valueField) {
+                    return (arr || []).map(function (it) {
+                        if (it === null || typeof it !== 'object') {
+                            return { label: String(it), value: String(it) };
+                        }
+                        var label = apiPick(it, labelField, 'label', 'name');
+                        var value = apiPick(it, valueField, 'value', 'id');
+                        return { label: String(label), value: String(value) };
+                    });
+                }
+
+                function fetchApiJson(el) {
+                    var url = el.getAttribute('data-api-url');
+                    var method = el.getAttribute('data-api-method') || 'GET';
+                    return fetch(url, method === 'POST' ? { method: 'POST' } : {})
+                        .then(function (res) {
+                            if (!res.ok) throw new Error('HTTP ' + res.status);
+                            return res.json();
+                        })
+                        .then(function (raw) {
+                            return resolveApiPath(raw, el.getAttribute('data-api-path') || '');
+                        });
+                }
+
+                Array.prototype.forEach.call(form.querySelectorAll('[data-api-options="1"]'), function (el) {
+                    var lf = el.getAttribute('data-api-label') || '';
+                    var vf = el.getAttribute('data-api-value') || '';
+
+                    fetchApiJson(el).then(function (arr) {
+                        if (!Array.isArray(arr)) throw new Error('接口返回不是数组');
+                        var options = normalizeApiOptions(arr, lf, vf);
+
+                        if (el.tagName === 'SELECT') {
+                            var placeholder = el.getAttribute('data-placeholder') || '请选择';
+                            var selRequired = el.getAttribute('data-required') === '1';
+                            if (selRequired) el.setAttribute('required', 'required');
+                            el.innerHTML = '<option value="">' + placeholder + '</option>'
+                                + options.map(function (o) {
+                                    return '<option value="' + escAttr(o.value) + '">' + escText(o.label) + '</option>';
+                                }).join('');
+                        } else {
+                            /* radio / checkbox 组 */
+                            var kind = el.getAttribute('data-kind') || 'radio';
+                            var baseName = el.getAttribute('data-name') || '';
+                            var inputName = kind === 'checkbox' ? baseName + '[]' : baseName;
+                            var required = el.getAttribute('data-required') === '1';
+                            el.className = 'f-opts' + (el.getAttribute('data-inline') === '1' ? ' inline' : '');
+                            if (kind === 'checkbox' && required) el.setAttribute('data-check-required', '1');
+                            el.innerHTML = options.map(function (o) {
+                                return '<label class="opt"><input type="' + kind + '" name="' + escAttr(inputName) + '" value="' + escAttr(o.value) + '"'
+                                    + (kind === 'radio' && required ? ' required' : '')
+                                    + '><span class="opt-text">' + escText(o.label) + '</span></label>';
+                            }).join('');
+                        }
+                    }).catch(function (err) {
+                        if (el.tagName === 'SELECT') {
+                            el.innerHTML = '<option value="">选项加载失败</option>';
+                            el.disabled = true;
+                        } else {
+                            el.innerHTML = '<span class="api-error">选项加载失败：' + escText(err.message) + '</span>';
+                        }
+                    });
+                });
+
+                /* 级联选择：多级联动（支持静态 JSON 与接口树形数据） */
+                Array.prototype.forEach.call(form.querySelectorAll('[data-cascade]'), function (wrap) {
+                    var hidden = wrap.querySelector('input[type=hidden]');
+                    var sels = wrap.querySelectorAll('.cascade-sel');
+                    var ph = wrap.getAttribute('data-placeholder') || '请选择';
+                    var useApi = wrap.getAttribute('data-api-cascade') === '1';
+
+                    /* 对象嵌套（静态）转统一树形结构 {label,value,children} */
+                    function objToTree(obj) {
+                        if (Array.isArray(obj)) {
+                            return obj.map(function (x) {
+                                if (x !== null && typeof x === 'object') {
+                                    var label = x.label != null ? x.label : x.name;
+                                    var value = x.value != null ? x.value : x.id;
+                                    var ch = Array.isArray(x.children) && x.children.length ? objToTree(x.children) : null;
+                                    return { label: String(label), value: String(value), children: ch };
+                                }
+                                return { label: String(x), value: String(x), children: null };
+                            });
+                        }
+                        if (obj && typeof obj === 'object') {
+                            return Object.keys(obj).map(function (k) {
+                                var child = obj[k];
+                                var hasChild = child !== null && typeof child === 'object';
+                                return { label: k, value: k, children: hasChild ? objToTree(child) : null };
+                            });
+                        }
+                        return [];
+                    }
+
+                    /* 接口树形数组转统一结构 */
+                    function apiToTree(arr) {
+                        var lf = wrap.getAttribute('data-api-label') || '';
+                        var vf = wrap.getAttribute('data-api-value') || '';
+                        var cf = wrap.getAttribute('data-api-children') || '';
+                        return (arr || []).map(function (it) {
+                            if (it === null || typeof it !== 'object') {
+                                return { label: String(it), value: String(it), children: null };
+                            }
+                            var label = apiPick(it, lf, 'label', 'name');
+                            var value = apiPick(it, vf, 'value', 'id');
+                            var childrenKey = cf || 'children';
+                            var ch = Array.isArray(it[childrenKey]) && it[childrenKey].length
+                                ? apiToTree(it[childrenKey])
+                                : null;
+                            return { label: String(label), value: String(value), children: ch };
+                        });
+                    }
+
+                    function fillLevel(level, nodes) {
+                        var sel = sels[level];
+                        if (!sel) return;
+                        while (sel.options.length > 1) sel.remove(1);
+                        (nodes || []).forEach(function (n) {
+                            var opt = document.createElement('option');
+                            opt.value = n.value;
+                            opt.textContent = n.label;
+                            opt._node = n;
+                            sel.appendChild(opt);
+                        });
+                        sel.disabled = !(nodes && nodes.length);
+                    }
+
+                    function clearFrom(level) {
+                        for (var i = level; i < sels.length; i++) {
+                            sels[i].value = '';
+                            while (sels[i].options.length > 1) sels[i].remove(1);
+                            sels[i].disabled = true;
+                        }
+                    }
+
+                    function syncHidden() {
+                        var path = [];
+                        for (var i = 0; i < sels.length; i++) {
+                            if (sels[i].value) path.push(sels[i].value);
+                            else break;
+                        }
+                        hidden.value = path.join(' / ');
+                        wrap.classList.remove('is-invalid');
+                    }
+
+                    function bindEvents() {
+                        Array.prototype.forEach.call(sels, function (sel, idx) {
+                            sel.addEventListener('change', function () {
+                                clearFrom(idx + 1);
+                                var chosen = sel.selectedOptions && sel.selectedOptions[0];
+                                var node = chosen && chosen._node;
+                                if (node && node.children && idx + 1 < sels.length) {
+                                    fillLevel(idx + 1, node.children);
+                                }
+                                syncHidden();
+                            });
+                        });
+                    }
+
+                    function init(tree) {
+                        fillLevel(0, tree);
+                        for (var i = 1; i < sels.length; i++) sels[i].disabled = true;
+                        bindEvents();
+                    }
+
+                    if (useApi) {
+                        /* 接口模式：第一级先展示加载态 */
+                        var firstSel = sels[0];
+                        var loadingOpt = document.createElement('option');
+                        loadingOpt.value = '';
+                        loadingOpt.disabled = true;
+                        loadingOpt.textContent = '加载中…';
+                        firstSel.appendChild(loadingOpt);
+
+                        fetchApiJson(wrap).then(function (arr) {
+                            if (!Array.isArray(arr)) throw new Error('接口返回不是数组');
+                            firstSel.removeChild(loadingOpt);
+                            init(apiToTree(arr));
+                        }).catch(function (err) {
+                            loadingOpt.textContent = '加载失败';
+                            firstSel.disabled = true;
+                        });
+                    } else {
+                        var data;
+                        try { data = JSON.parse(wrap.getAttribute('data-json') || '{}'); } catch (e) { data = {}; }
+                        init(objToTree(data));
+                    }
+                });
+
+                /* 富文本编辑器 */
+                Array.prototype.forEach.call(form.querySelectorAll('[data-richtext]'), function (wrap) {
+                    var hidden = wrap.querySelector('input[type=hidden]');
+                    var editor = wrap.querySelector('.rt-editor');
+                    var btns = wrap.querySelectorAll('.rt-btn');
+
+                    function sync() {
+                        hidden.value = editor.innerHTML.trim();
+                        wrap.classList.remove('is-invalid');
+                    }
+
+                    btns.forEach(function (btn) {
+                        btn.addEventListener('click', function (e) {
+                            e.preventDefault();
+                            var cmd = btn.getAttribute('data-cmd');
+                            editor.focus();
+                            if (cmd === 'createLink') {
+                                var url = window.prompt('请输入链接地址：', 'https://');
+                                if (url) document.execCommand('createLink', false, url);
+                            } else if (cmd === 'formatBlock') {
+                                document.execCommand('formatBlock', false, btn.getAttribute('data-val') || 'blockquote');
+                            } else {
+                                document.execCommand(cmd, false, null);
+                            }
+                            sync();
+                        });
+                    });
+
+                    editor.addEventListener('input', sync);
+                    editor.addEventListener('blur', sync);
+                });
+
+                var msg = form.querySelector('[data-form-msg]');
+                form.addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    msg.className = 'form-msg';
+                    msg.textContent = '';
+
+                    if (!form.checkValidity()) {
+                        form.reportValidity();
+                        return;
+                    }
+
+                    var valid = true;
+                    Array.prototype.forEach.call(form.querySelectorAll('[data-check-required="1"]'), function (g) {
+                        if (!g.querySelectorAll('input[type=checkbox]:checked').length) {
+                            g.classList.add('is-invalid');
+                            valid = false;
+                        }
+                    });
+                    Array.prototype.forEach.call(form.querySelectorAll('[data-upload]'), function (wrap) {
+                        if (wrap.getAttribute('data-required') === '1') {
+                            var hidden = wrap.querySelector('input[type=hidden]');
+                            var fileInput = wrap.querySelector('input[type=file]');
+                            if (!hidden.value && !fileInput.files.length) {
+                                wrap.classList.add('is-invalid');
+                                valid = false;
+                            }
+                        }
+                    });
+                    /* 评分必填校验 */
+                    Array.prototype.forEach.call(form.querySelectorAll('[data-rating]'), function (wrap) {
+                        if (wrap.getAttribute('data-required') === '1') {
+                            var rv = parseInt(wrap.querySelector('input[type=hidden]').value, 10) || 0;
+                            if (rv <= 0) { wrap.classList.add('is-invalid'); valid = false; }
+                        }
+                    });
+                    /* 级联选择必填校验 */
+                    Array.prototype.forEach.call(form.querySelectorAll('[data-cascade]'), function (wrap) {
+                        if (wrap.getAttribute('data-required') === '1') {
+                            var cv = wrap.querySelector('input[type=hidden]').value;
+                            if (!cv) { wrap.classList.add('is-invalid'); valid = false; }
+                        }
+                    });
+                    /* 富文本必填校验 */
+                    Array.prototype.forEach.call(form.querySelectorAll('[data-richtext]'), function (wrap) {
+                        if (wrap.getAttribute('data-required') === '1') {
+                            var rt = wrap.querySelector('input[type=hidden]').value;
+                            /* 去除空标签后的纯文本 */
+                            var tmp = document.createElement('div');
+                            tmp.innerHTML = rt;
+                            if (!tmp.textContent.trim()) { wrap.classList.add('is-invalid'); valid = false; }
+                        }
+                    });
+                    if (!valid) {
+                        msg.className = 'form-msg err';
+                        msg.textContent = '请完成所有必填项';
+                        return;
+                    }
+
+                    var fd = new FormData(form);
+                    /* 已异步上传的文件不再重复提交，hidden 字段携带返回的 URL */
+                    Array.prototype.forEach.call(form.querySelectorAll('input[type=file][data-uploaded]'), function (inp) {
+                        fd.delete(inp.name);
+                    });
+
+                    if (!opts.action) {
+                        var obj = {};
+                        fd.forEach(function (v, k) {
+                            if (Object.prototype.hasOwnProperty.call(obj, k)) {
+                                if (Array.isArray(obj[k])) obj[k].push(v);
+                                else obj[k] = [obj[k], v];
+                            } else {
+                                obj[k] = v;
+                            }
+                        });
+                        msg.className = 'form-msg ok';
+                        msg.textContent = '未配置提交地址，当前表单数据：' + JSON.stringify(obj);
+                        return;
+                    }
+
+                    msg.className = 'form-msg';
+                    msg.textContent = '提交中…';
+                    fetch(opts.action, { method: 'POST', body: fd }).then(function (res) {
+                        if (!res.ok) throw new Error('HTTP ' + res.status);
+                        msg.className = 'form-msg ok';
+                        msg.textContent = '提交成功';
+                    }).catch(function (err) {
+                        msg.className = 'form-msg err';
+                        msg.textContent = '提交失败：' + err.message;
+                    });
+                });
+            }
+
+            /* ================= 草稿自动保存 ================= */
+            function saveDraft() {
+                try {
+                    localStorage.setItem(STORE_KEY, JSON.stringify({ form: formConf, fields: fields }));
+                } catch (e) { }
+            }
+
+            function loadDraft() {
+                try {
+                    var raw = localStorage.getItem(STORE_KEY);
+                    if (!raw) return;
+                    var d = JSON.parse(raw);
+                    if (d.form && typeof d.form === 'object') {
+                        formConf.title = d.form.title || '未命名表单';
+                        formConf.action = d.form.action || '';
+                        formConf.submitText = d.form.submitText || '提交';
+                    }
+                    if (Array.isArray(d.fields)) {
+                        /* 旧草稿兼容：选择类组件补充数据源默认配置 */
+                        fields = d.fields;
+                        fields.forEach(function (f) {
+                            if (!f.props) return;
+                            if (['select', 'radio', 'checkbox', 'cascade'].indexOf(f.type) >= 0) {
+                                if (!f.props.dataSource) f.props.dataSource = 'static';
+                                ['apiUrl', 'apiMethod', 'apiPath', 'labelField', 'valueField', 'childrenField'].forEach(function (k) {
+                                    if (f.props[k] === undefined) f.props[k] = (k === 'apiMethod' ? 'GET' : '');
+                                });
+                            }
+                        });
+                    }
+                } catch (e) { }
+            }
+
+            /* ================= 事件绑定 ================= */
+            function bindEvents() {
+                /* 组件面板：拖拽 + 点击添加 */
+                paletteEl.addEventListener('dragstart', function (e) {
+                    var item = e.target.closest('.pal-item');
+                    if (!item) return;
+                    dragData = { source: 'palette', type: item.dataset.type };
+                    e.dataTransfer.setData('text/plain', 'add:' + item.dataset.type);
+                    e.dataTransfer.effectAllowed = 'copy';
+                    item.classList.add('pal-dragging');
+                });
+
+                paletteEl.addEventListener('dragend', function (e) {
+                    var item = e.target.closest('.pal-item');
+                    if (item) item.classList.remove('pal-dragging');
+                    dragData = null;
+                    lastPaletteDragEnd = Date.now();
+                    clearIndicator();
+                });
+
+                paletteEl.addEventListener('click', function (e) {
+                    if (Date.now() - lastPaletteDragEnd < 120) return;
+                    var item = e.target.closest('.pal-item');
+                    if (item) addField(item.dataset.type, fields.length);
+                });
+
+                /* 设计区：拖拽排序 / 放入 */
+                listEl.addEventListener('dragstart', function (e) {
+                    var cf = e.target.closest('.cf');
+                    if (!cf) return;
+                    dragData = { source: 'canvas', id: cf.dataset.id };
+                    e.dataTransfer.setData('text/plain', 'move:' + cf.dataset.id);
+                    e.dataTransfer.effectAllowed = 'move';
+                    cf.classList.add('dragging');
+                });
+
+                listEl.addEventListener('dragend', function (e) {
+                    var cf = e.target.closest('.cf');
+                    if (cf) cf.classList.remove('dragging');
+                    dragData = null;
+                    clearIndicator();
+                });
+
+                listEl.addEventListener('dragover', function (e) {
+                    if (!dragData) return;
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = dragData.source === 'palette' ? 'copy' : 'move';
+                    placeIndicator(computeIndex(e.clientY));
+                });
+
+                listEl.addEventListener('dragleave', function (e) {
+                    if (!listEl.contains(e.relatedTarget)) clearIndicator();
+                });
+
+                listEl.addEventListener('drop', function (e) {
+                    if (!dragData) return;
+                    e.preventDefault();
+                    var idx = dropIdx >= 0 ? dropIdx : computeIndex(e.clientY);
+                    if (dragData.source === 'canvas') {
+                        var from = fields.findIndex(function (f) { return f.id === dragData.id; });
+                        if (from >= 0) {
+                            var moved = fields.splice(from, 1)[0];
+                            fields.splice(Math.min(idx, fields.length), 0, moved);
+                        }
+                    } else {
+                        var nf = createField(dragData.type);
+                        fields.splice(Math.min(idx, fields.length), 0, nf);
+                        selectedId = nf.id;
+                    }
+                    dragData = null;
+                    clearIndicator();
+                    renderCanvas();
+                    saveDraft();
+                });
+
+                /* 设计区：选中 / 设置 / 删除 */
+                listEl.addEventListener('click', function (e) {
+                    var cf = e.target.closest('.cf');
+                    if (!cf) return;
+                    var actEl = e.target.closest('[data-act]');
+                    if (actEl && actEl.dataset.act === 'delete') {
+                        deleteField(cf.dataset.id);
+                        return;
+                    }
+                    if (actEl && actEl.dataset.act === 'setting') {
+                        selectedId = cf.dataset.id;
+                        renderCanvas();
+                        openFieldSettings(cf.dataset.id);
+                        return;
+                    }
+                    if (selectedId !== cf.dataset.id) {
+                        selectedId = cf.dataset.id;
+                        renderCanvas();
+                    }
+                });
+
+                /* 点击设计区空白取消选中 */
+                document.querySelector('.canvas-area').addEventListener('click', function (e) {
+                    if (!e.target.closest('.cf')) {
+                        if (selectedId) {
+                            selectedId = null;
+                            renderCanvas();
+                        }
+                    }
+                });
+
+                /* 字段设置弹窗：选项增删 / 数据源切换 / 接口测试 */
+                $('settingsMask').addEventListener('click', function (e) {
+                    /* 数据源 tab 切换 */
+                    var tabBtn = e.target.closest('[data-act="ds-tab"]');
+                    if (tabBtn) {
+                        var dsBox = tabBtn.closest('[data-ds-box]');
+                        var tab = tabBtn.getAttribute('data-tab');
+                        dsBox.querySelectorAll('.ds-tab').forEach(function (b) {
+                            b.classList.toggle('is-active', b === tabBtn);
+                        });
+                        dsBox.querySelectorAll('.ds-panel').forEach(function (pnl) {
+                            pnl.hidden = pnl.getAttribute('data-panel') !== tab;
+                        });
+                        dsBox.querySelector('[data-key="dataSource"]').value = tab;
+                        return;
+                    }
+
+                    /* 测试接口 */
+                    var testBtn = e.target.closest('[data-act="test-api"]');
+                    if (testBtn) {
+                        testDatasourceApi(testBtn.closest('[data-ds-box]'), testBtn);
+                        return;
+                    }
+
+                    var addBtn = e.target.closest('[data-act="add-opt"]');
+                    if (addBtn) {
+                        var box = $('settingsBody').querySelector('[data-options-box]');
+                        var count = box.querySelectorAll('.opt-row').length;
+                        var row = document.createElement('div');
+                        row.className = 'opt-row';
+                        row.innerHTML = optionRowHtml({ label: '', value: String(count + 1) });
+                        box.insertBefore(row, addBtn.parentElement === box ? addBtn : addBtn);
+                        var firstInput = row.querySelector('.opt-label');
+                        firstInput.focus();
+                        return;
+                    }
+                    var delBtn = e.target.closest('.opt-del');
+                    if (delBtn) {
+                        delBtn.closest('.opt-row').remove();
+                    }
+                });
+
+                $('btnSaveSettings').addEventListener('click', saveFieldSettings);
+                $('btnSaveForm').addEventListener('click', saveFormSettings);
+                $('btnFormSettings').addEventListener('click', openFormSettings);
+                $('btnPreview').addEventListener('click', openPreview);
+                $('btnExport').addEventListener('click', exportHtml);
+
+                $('btnClear').addEventListener('click', function () {
+                    confirmBox('清空设计区', '确定要清空所有组件吗？此操作不可恢复。').then(function (ok) {
+                        if (!ok) return;
+                        fields = [];
+                        selectedId = null;
+                        renderCanvas();
+                        saveDraft();
+                        toast('已清空');
+                    });
+                });
+
+                /* 弹窗：遮罩点击 / 关闭按钮 / ESC */
+                document.querySelectorAll('.modal-mask').forEach(function (mask) {
+                    mask.querySelectorAll('[data-close]').forEach(function (btn) {
+                        btn.addEventListener('click', function () {
+                            mask.classList.remove('show');
+                            mask.dispatchEvent(new Event('mclose'));
+                        });
+                    });
+                });
+
+                document.addEventListener('keydown', function (e) {
+                    if (e.key === 'Escape') closeTopMask();
+                });
+            }
+
+            /* ================= 初始化 ================= */
+            function init() {
+                $('brandSvg').innerHTML = icon('pencil');
+                loadDraft();
+                renderPalette();
+                renderCanvas();
+                bindEvents();
+            }
+
+            init();
+        })();
+    </script>
+</body>
+
+</html>

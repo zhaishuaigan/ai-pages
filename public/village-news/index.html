@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>青山村电子报 · 乡村一周要闻</title>
+    <style>
+        :root {
+            --paper: #f7f3ea;
+            --card: #fffdf7;
+            --ink: #2c2420;
+            --ink-soft: #6b6157;
+            --line: #d8cfbf;
+            --red: #b03a2e;
+            --red-soft: #f7e8e5;
+            --green: #3d7a4f;
+            --shadow: 0 2px 10px rgba(60, 45, 30, .08);
+        }
+        :root[data-theme="dark"] {
+            --paper: #171310;
+            --card: #211c16;
+            --ink: #e9e1d3;
+            --ink-soft: #a89b89;
+            --line: #3b332a;
+            --red: #e0705a;
+            --red-soft: #3a2622;
+            --green: #7db98a;
+            --shadow: 0 2px 10px rgba(0, 0, 0, .4);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            background: var(--paper);
+            color: var(--ink);
+            font-family: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
+            line-height: 1.7;
+            transition: background .3s, color .3s;
+        }
+        .serif { font-family: "Noto Serif SC", "Source Han Serif SC", "SimSun", "STSong", serif; }
+        .wrap { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+
+        /* 报头 */
+        .masthead { padding: 26px 0 14px; }
+        .mast-top { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--ink-soft); }
+        .mast-top a { color: var(--ink-soft); text-decoration: none; border-bottom: 1px dashed var(--line); }
+        .mast-top a:hover { color: var(--red); }
+        .theme-btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            border: 1px solid var(--line); background: var(--card); color: var(--ink);
+            border-radius: 20px; padding: 5px 14px; font-size: 13px; cursor: pointer;
+            transition: all .3s;
+        }
+        .theme-btn:hover { border-color: var(--red); color: var(--red); }
+        .theme-btn svg { width: 15px; height: 15px; }
+        :root[data-theme="dark"] .icon-sun { display: none; }
+        :root:not([data-theme="dark"]) .icon-moon { display: none; }
+        .paper-title {
+            text-align: center; font-size: clamp(42px, 8vw, 76px);
+            letter-spacing: .18em; color: var(--red); font-weight: 900;
+            margin: 10px 0 4px; text-indent: .18em;
+        }
+        .paper-sub {
+            text-align: center; font-size: 13px; color: var(--ink-soft);
+            display: flex; justify-content: center; gap: 18px; flex-wrap: wrap;
+        }
+        .paper-sub b { color: var(--ink); font-weight: 600; }
+        .mast-rule { border: none; border-top: 3px double var(--red); margin: 14px 0 0; }
+
+        /* 导航 */
+        .nav {
+            position: sticky; top: 0; z-index: 50;
+            background: var(--card); border-bottom: 1px solid var(--line);
+            box-shadow: var(--shadow);
+        }
+        .nav-in { display: flex; gap: 4px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .nav a {
+            white-space: nowrap; padding: 11px 16px; text-decoration: none;
+            color: var(--ink-soft); font-size: 14px; font-weight: 600;
+            border-bottom: 2px solid transparent;
+        }
+        .nav a:hover { color: var(--red); border-bottom-color: var(--red); }
+
+        /* 版块通用 */
+        main { padding: 26px 0 50px; }
+        section { margin-bottom: 30px; }
+        .col-title {
+            display: flex; align-items: baseline; gap: 10px;
+            border-bottom: 2px solid var(--ink); padding-bottom: 8px; margin-bottom: 16px;
+        }
+        .col-title .no { font-size: 12px; color: var(--red); font-weight: 700; letter-spacing: .1em; }
+        .col-title h2 { font-size: 22px; font-weight: 900; letter-spacing: .1em; }
+        .col-title .en { margin-left: auto; font-size: 11px; color: var(--ink-soft); letter-spacing: .2em; }
+        .col-title .dot { width: 10px; height: 10px; background: var(--red); align-self: center; }
+        .card { background: var(--card); border: 1px solid var(--line); box-shadow: var(--shadow); }
+
+        /* 头版：大事件 + 新鲜事 */
+        .top-grid { display: grid; grid-template-columns: 1.7fr 1fr; gap: 22px; align-items: start; }
+        .headline { padding: 22px; }
+        .headline h3 { font-size: clamp(22px, 3vw, 30px); line-height: 1.4; margin: 10px 0 12px; }
+        .headline img { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; border: 1px solid var(--line); }
+        .kicker { display: inline-block; background: var(--red); color: #fff; font-size: 12px; padding: 2px 10px; letter-spacing: .15em; }
+        .headline .lead { color: var(--ink); font-size: 15px; margin: 12px 0; }
+        .headline .meta { font-size: 12px; color: var(--ink-soft); border-top: 1px dashed var(--line); padding-top: 10px; margin-top: 10px; }
+        .fresh { padding: 18px 20px; }
+        .fresh-item { padding: 11px 0; border-bottom: 1px dashed var(--line); font-size: 14px; }
+        .fresh-item:last-child { border-bottom: none; padding-bottom: 0; }
+        .fresh-item .tag { color: var(--red); font-weight: 700; margin-right: 6px; }
+        .fresh-item .date { float: right; font-size: 12px; color: var(--ink-soft); }
+
+        /* 新店开张 */
+        .shop-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+        .shop { overflow: hidden; transition: transform .25s; }
+        .shop:hover { transform: translateY(-4px); }
+        .shop img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; }
+        .shop-body { padding: 14px 16px 16px; }
+        .shop-body h4 { font-size: 17px; margin-bottom: 4px; }
+        .shop-body h4 .badge {
+            font-size: 11px; color: #fff; background: var(--red);
+            padding: 1px 8px; border-radius: 10px; margin-left: 6px; vertical-align: 2px;
+        }
+        .shop-body p { font-size: 13px; color: var(--ink-soft); }
+        .shop-body .offer { margin-top: 8px; font-size: 13px; color: var(--red); background: var(--red-soft); padding: 4px 10px; border-radius: 4px; display: inline-block; }
+
+        /* 下半版三栏 */
+        .bottom-grid { display: grid; grid-template-columns: 1fr 1fr 1.1fr; gap: 22px; align-items: start; }
+        .panel { padding: 18px 20px; }
+        .job { padding: 12px 0; border-bottom: 1px dashed var(--line); }
+        .job:last-child { border-bottom: none; }
+        .job h4 { font-size: 16px; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+        .job h4 .pay { color: var(--red); font-weight: 700; font-size: 15px; white-space: nowrap; }
+        .job p { font-size: 13px; color: var(--ink-soft); margin-top: 2px; }
+        .match { padding: 13px 14px; border: 1px solid var(--line); margin-bottom: 12px; background: var(--paper); }
+        .match:last-child { margin-bottom: 0; }
+        .match h4 { font-size: 15px; }
+        .match h4 .num { color: var(--red); margin-right: 6px; }
+        .match p { font-size: 13px; color: var(--ink-soft); margin-top: 3px; }
+        .match-note { font-size: 12px; color: var(--green); margin-top: 10px; display: flex; gap: 6px; align-items: center; }
+        .match-note svg { width: 14px; height: 14px; flex: none; }
+
+        /* 投稿 */
+        .letter { background: var(--red-soft); border-left: 3px solid var(--red); padding: 10px 12px; font-size: 13px; margin-bottom: 14px; }
+        .letter b { display: block; margin-bottom: 2px; }
+        .form label { display: block; font-size: 13px; color: var(--ink-soft); margin: 10px 0 4px; }
+        .form input, .form select, .form textarea {
+            width: 100%; border: 1px solid var(--line); background: var(--paper);
+            color: var(--ink); padding: 8px 10px; font-size: 14px; font-family: inherit; border-radius: 4px;
+        }
+        .form input:focus, .form select:focus, .form textarea:focus { outline: none; border-color: var(--red); }
+        .form .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .form textarea { resize: vertical; min-height: 90px; }
+        .form button {
+            width: 100%; margin-top: 14px; background: var(--red); color: #fff;
+            border: none; padding: 11px; font-size: 15px; font-weight: 700;
+            letter-spacing: .3em; text-indent: .3em; cursor: pointer; border-radius: 4px;
+        }
+        .form button:hover { filter: brightness(1.08); }
+        .tip-success {
+            margin-top: 12px; font-size: 13px; color: var(--green);
+            border: 1px solid var(--green); border-radius: 4px; padding: 8px 10px; text-align: center;
+        }
+        .tip-success[hidden] { display: none; }
+
+        /* 页脚 */
+        footer { border-top: 3px double var(--red); padding: 20px 0 34px; text-align: center; font-size: 12px; color: var(--ink-soft); }
+        footer .serif { font-size: 15px; color: var(--ink); margin-bottom: 6px; }
+
+        /* 响应式 */
+        @media (max-width: 1020px) {
+            .bottom-grid { grid-template-columns: 1fr 1fr; }
+            .bottom-grid .col-post { grid-column: 1 / -1; }
+        }
+        @media (max-width: 860px) {
+            .top-grid, .shop-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 620px) {
+            .bottom-grid { grid-template-columns: 1fr; }
+            .paper-title { letter-spacing: .1em; text-indent: .1em; }
+            .col-title h2 { font-size: 19px; }
+            .headline { padding: 16px; }
+            .form .row { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <header class="masthead">
+        <div class="wrap">
+            <div class="mast-top">
+                <span id="publisher">电子报</span>
+                <span style="display:inline-flex;gap:10px;align-items:center;">
+                    <a href="admin.html">内容管理</a>
+                    <button class="theme-btn" id="themeBtn" type="button">
+                        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+                        <span>切换主题</span>
+                    </button>
+                </span>
+            </div>
+            <h1 class="paper-title serif" id="paperName">电子报</h1>
+            <p class="paper-sub">
+                <span>总第 <b id="issue">--</b> 期</span>
+                <span>本期 <b id="today">----</b></span>
+                <span>天气 <b id="weather">--</b></span>
+                <span id="note"></span>
+            </p>
+            <hr class="mast-rule">
+        </div>
+    </header>
+
+    <nav class="nav">
+        <div class="wrap nav-in">
+            <a href="#events">大事件</a>
+            <a href="#fresh">新鲜事</a>
+            <a href="#shops">新店开张</a>
+            <a href="#jobs">招工</a>
+            <a href="#match">婚介</a>
+            <a href="#post">投稿</a>
+        </div>
+    </nav>
+
+    <main class="wrap">
+        <div class="top-grid">
+            <section id="events">
+                <div class="col-title">
+                    <span class="dot"></span><h2 class="serif">大事件</h2>
+                    <span class="no">01 / 头版要闻</span><span class="en">TOP EVENTS</span>
+                </div>
+                <article class="card headline" id="headlineBox"></article>
+            </section>
+
+            <section id="fresh">
+                <div class="col-title">
+                    <span class="dot"></span><h2 class="serif">新鲜事</h2>
+                    <span class="no">02 / 村里短波</span><span class="en">FRESH NEWS</span>
+                </div>
+                <div class="card fresh" id="freshList"></div>
+            </section>
+        </div>
+
+        <section id="shops">
+            <div class="col-title">
+                <span class="dot"></span><h2 class="serif">新店开张</h2>
+                <span class="no">03 / 便民商业</span><span class="en">NEW SHOPS</span>
+            </div>
+            <div class="shop-grid" id="shopGrid"></div>
+        </section>
+
+        <div class="bottom-grid">
+            <section id="jobs">
+                <div class="col-title">
+                    <span class="dot"></span><h2 class="serif">招工</h2>
+                    <span class="no">04 / 就业信息</span><span class="en">HIRING</span>
+                </div>
+                <div class="card panel" id="jobBox"></div>
+            </section>
+
+            <section id="match">
+                <div class="col-title">
+                    <span class="dot"></span><h2 class="serif">婚介</h2>
+                    <span class="no">05 / 良缘一线牵</span><span class="en">MATCHMAKING</span>
+                </div>
+                <div class="card panel" id="matchBox"></div>
+            </section>
+
+            <section id="post" class="col-post">
+                <div class="col-title">
+                    <span class="dot"></span><h2 class="serif">投稿</h2>
+                    <span class="no">06 / 读者园地</span><span class="en">SUBMISSIONS</span>
+                </div>
+                <div class="card panel">
+                    <div class="letter" id="letterBox"></div>
+                    <form class="form" id="postForm">
+                        <div class="row">
+                            <div>
+                                <label for="name">笔名 / 姓名</label>
+                                <input id="name" type="text" placeholder="例：东山樵夫" required>
+                            </div>
+                            <div>
+                                <label for="phone">联系电话</label>
+                                <input id="phone" type="tel" placeholder="仅编辑联系用，不公开" required>
+                            </div>
+                        </div>
+                        <label for="type">投稿栏目</label>
+                        <select id="type">
+                            <option>村情村况</option>
+                            <option>好人好事</option>
+                            <option>诗文书画</option>
+                            <option>意见建议</option>
+                            <option>寻人寻物</option>
+                        </select>
+                        <label for="content">稿件内容（500 字以内）</label>
+                        <textarea id="content" maxlength="500" placeholder="写下你身边的乡村故事，下期报纸见！" required></textarea>
+                        <button type="submit">投 稿</button>
+                        <p class="tip-success" id="formTip" hidden>投稿成功！编辑部将于三日内与您联系，感谢支持。</p>
+                    </form>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <div class="wrap">
+            <p class="serif" id="ftSlogan"></p>
+            <p id="ftOrganizer"></p>
+            <p id="ftCopyright"></p>
+        </div>
+    </footer>
+
+    <script>
+        // 主题切换（记忆上次选择）
+        var root = document.documentElement;
+        if (localStorage.getItem("vn-theme") === "dark") root.dataset.theme = "dark";
+        document.getElementById("themeBtn").addEventListener("click", function () {
+            var dark = root.dataset.theme !== "dark";
+            if (dark) root.dataset.theme = "dark"; else delete root.dataset.theme;
+            localStorage.setItem("vn-theme", dark ? "dark" : "light");
+        });
+
+        // 投稿表单（静态演示）
+        document.getElementById("postForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+            var tip = document.getElementById("formTip");
+            tip.hidden = false;
+            this.reset();
+            setTimeout(function () { tip.hidden = true; }, 4000);
+        });
+
+        function esc(s) {
+            return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+                return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+            });
+        }
+        function svgCheck() {
+            return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 11.1V12a10 10 0 1 1-5.9-9.1"/><path d="M22 4 12 14l-3-3"/></svg>';
+        }
+        function svgHeart() {
+            return '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.9-10-9.2C.6 8.6 2.4 5 5.7 5c2 0 3.4 1.1 4.3 2.6h4c.9-1.5 2.3-2.6 4.3-2.6 3.3 0 5.1 3.6 3.7 6.8C19.5 16.1 12 21 12 21z"/></svg>';
+        }
+
+        // 渲染报纸
+        function render(d) {
+            document.title = d.meta.name + " · 乡村一周要闻";
+            document.getElementById("paperName").textContent = d.meta.name;
+            document.getElementById("publisher").textContent = d.meta.publisher;
+            document.getElementById("weather").textContent = d.meta.weather;
+            document.getElementById("note").innerHTML = "出版说明 <b>" + esc(d.meta.note) + "</b>";
+
+            var now = new Date();
+            document.getElementById("today").textContent = now.toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric", weekday: "long" });
+            var issue = Math.floor((now - new Date(d.meta.startDate)) / 864e5) + 1;
+            document.getElementById("issue").textContent = issue;
+
+            var h = d.headline;
+            document.getElementById("headlineBox").innerHTML =
+                '<span class="kicker">' + esc(h.kicker) + "</span>" +
+                '<h3 class="serif">' + esc(h.title) + "</h3>" +
+                '<img src="' + esc(h.image) + '" alt="头条配图">' +
+                h.paragraphs.map(function (p) { return '<p class="lead">' + esc(p) + "</p>"; }).join("") +
+                '<p class="meta">' + esc(h.author) + " · 阅读 " + esc(h.views) + " 次</p>";
+
+            document.getElementById("freshList").innerHTML = d.fresh.map(function (f) {
+                return '<p class="fresh-item"><span class="date">' + esc(f.date) + '</span><span class="tag">#</span>' + esc(f.text) + "</p>";
+            }).join("") || '<p class="fresh-item">暂无内容</p>';
+
+            document.getElementById("shopGrid").innerHTML = d.shops.map(function (s) {
+                return '<article class="card shop">' +
+                    '<img loading="lazy" src="' + esc(s.image) + '" alt="' + esc(s.name) + '">' +
+                    '<div class="shop-body"><h4 class="serif">' + esc(s.name) +
+                    (s.badge ? '<span class="badge">' + esc(s.badge) + "</span>" : "") + "</h4>" +
+                    "<p>" + esc(s.desc) + "</p>" +
+                    (s.offer ? '<span class="offer">' + esc(s.offer) + "</span>" : "") +
+                    "</div></article>";
+            }).join("") || '<article class="card shop"><div class="shop-body">暂无内容</div></article>';
+
+            document.getElementById("jobBox").innerHTML = d.jobs.map(function (j) {
+                return '<div class="job"><h4>' + esc(j.title) +
+                    (j.count ? "（" + esc(j.count) + "人）" : "") +
+                    '<span class="pay">' + esc(j.pay) + "</span></h4>" +
+                    "<p>" + esc(j.desc) + " 联系人：" + esc(j.contact) + "</p></div>";
+            }).join("") + '<div class="match-note">' + svgCheck() + esc(d.jobNote) + "</div>";
+
+            document.getElementById("matchBox").innerHTML = d.matches.map(function (m) {
+                return '<div class="match"><h4 class="serif"><span class="num">' + esc(m.num) + "</span>" +
+                    esc(m.name) + " · " + esc(m.age) + "岁</h4><p>" + esc(m.desc) + "</p></div>";
+            }).join("") + '<div class="match-note">' + svgHeart() + esc(d.matchNote) + "</div>";
+
+            document.getElementById("letterBox").innerHTML =
+                '<b class="serif">读者来信 · 本期选登</b>"' + esc(d.letter.text) + '"——' + esc(d.letter.from);
+
+            document.getElementById("ftSlogan").textContent = d.footer.slogan;
+            document.getElementById("ftOrganizer").textContent = d.footer.organizer;
+            document.getElementById("ftCopyright").textContent = d.footer.copyright;
+        }
+
+        // 加载数据
+        fetch("data.json", { cache: "no-store" })
+            .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+            .then(render)
+            .catch(function () {
+                document.getElementById("headlineBox").innerHTML =
+                    '<p class="lead">报纸数据加载失败，请确认 data.json 文件与页面位于同一目录。</p>';
+            });
+    </script>
+</body>
+</html>
